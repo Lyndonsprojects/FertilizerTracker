@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -143,6 +141,90 @@
         color: var(--text3);
         margin-top: 3px;
         font-family: var(--mono)
+    }
+
+    .header-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px
+    }
+
+    .menu-trigger {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface3);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer
+    }
+
+    .menu-trigger svg {
+        width: 22px;
+        height: 22px
+    }
+
+    .menu-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .5);
+        z-index: 220;
+        display: none
+    }
+
+    .menu-overlay.open {
+        display: block
+    }
+
+    .menu-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: min(86vw, 360px);
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        z-index: 230;
+        transform: translateX(100%);
+        transition: transform .2s ease;
+        padding: 18px 16px calc(18px + var(--safe-bottom));
+        overflow-y: auto
+    }
+
+    .menu-panel.open {
+        transform: translateX(0)
+    }
+
+    .menu-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px
+    }
+
+    .menu-title {
+        font-family: var(--display);
+        font-size: 24px;
+        letter-spacing: .08em;
+        color: var(--accent)
+    }
+
+    .menu-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface3);
+        color: var(--text);
+        cursor: pointer
+    }
+
+    .menu-section {
+        margin-bottom: 12px
     }
 
     .content {
@@ -622,11 +704,91 @@
         border-color: var(--accent2)
     }
 
-    .fill-title-row {
+    #fill-mode-toggle-btn {
+        width: 100%;
+        font-size: 18px;
+        padding: 13px 14px;
+        min-height: 46px;
+        border-color: var(--accent);
+        color: var(--accent)
+    }
+
+    .fill-toggle-row {
         display: flex;
-        align-items: center;
+        justify-content: center;
+        margin: 10px 0 12px
+    }
+
+    .field-notes-wrap {
+        margin-top: 10px
+    }
+
+    .field-notes-wrap textarea {
+        min-height: 66px;
+        resize: vertical
+    }
+
+    .done-preview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px
+    }
+
+    .log-done-footer {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+        position: sticky;
+        bottom: 0;
+        background: var(--surface2)
+    }
+
+    .settings-page-actions {
+        margin-top: 10px
+    }
+
+    .fill-summary-card {
+        padding: 10px 12px
+    }
+
+    .fill-summary-top {
+        display: flex;
         justify-content: space-between;
-        gap: 10px
+        align-items: center;
+        gap: 8px
+    }
+
+    .fill-summary-list {
+        margin-top: 8px
+    }
+
+    .fill-summary-list .info-row {
+        margin-bottom: 4px
+    }
+
+    .fill-summary-body {
+        margin-top: 8px
+    }
+
+    .fill-summary-body.collapsed {
+        display: none
+    }
+
+    .fill-summary-collapsed-preview {
+        display: none;
+        margin-top: 8px
+    }
+
+    .fill-summary-collapsed-preview.open {
+        display: block
+    }
+
+    .readout-row .info-key, .readout-row .info-val {
+        color: var(--text)
+    }
+
+    .field-wording-strong .info-key {
+        color: var(--text)
     }/* iPhone / iPad optimization */
     .page {
         min-height: 100vh;
@@ -669,20 +831,6 @@
         border-radius: 8px
     }
 
-    .unit-switch {
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-        padding: 10px 16px 8px
-    }
-
-    .unit-switch .input-group {
-        margin-bottom: 0
-    }
-
-    .unit-switch .input-label {
-        margin-bottom: 4px
-    }
-
     @supports (padding: max(0px)) {
         .page-header {
             padding-left: max(16px, var(--safe-left));
@@ -702,7 +850,7 @@
 
     @media (max-width: 430px) {
         :root {
-            --nav-lift: 6px
+            --nav-lift: 10px
         }
 
         .nav {
@@ -711,6 +859,10 @@
 
         .page-header h1 {
             font-size: 28px
+        }
+
+        .header-title-row {
+            align-items: flex-end
         }
 
         .card {
@@ -781,18 +933,38 @@
 <body>
 
     <div class="toast" id="toast"></div>
-    <div class="unit-switch">
-        <div class="input-group">
-            <label class="input-label">Tracker Unit</label>
-            <select id="global-unit-select" onchange="onGlobalUnitChange()"></select>
+    <div class="menu-overlay" id="menu-overlay" onclick="closeMainMenu()"></div>
+    <aside class="menu-panel" id="menu-panel">
+        <div class="menu-head">
+            <div class="menu-title">Menu</div>
+            <button class="menu-close" onclick="closeMainMenu()">✕</button>
         </div>
-    </div>
+        <div class="menu-section card">
+            <div class="card-title">Unit</div>
+            <div class="input-group" style="margin-bottom:0">
+                <label class="input-label">Active Unit</label>
+                <select id="menu-unit-select" onchange="onMenuUnitChange()"></select>
+            </div>
+        </div>
+        <div class="menu-section card">
+            <button class="btn btn-secondary" style="margin-bottom:8px" onclick="showPage('settings');closeMainMenu()">Settings</button>
+            <button class="btn btn-secondary" onclick="showPage('data');closeMainMenu()">Data</button>
+        </div>
+    </aside>
 
     <!-- HOME -->
     <div class="page active" id="page-home">
         <div class="page-header">
-            <h1>Field Tracker</h1>
-            <p id="home-subtitle">Active Fields</p>
+            <div class="header-title-row">
+                <h1>Field Tracker</h1>
+                <button class="menu-trigger" onclick="toggleMainMenu()" aria-label="Open menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="7" x2="20" y2="7"/>
+                        <line x1="4" y1="12" x2="20" y2="12"/>
+                        <line x1="4" y1="17" x2="20" y2="17"/>
+                    </svg>
+                </button>
+            </div>
         </div>
         <div class="content">
             <button class="btn btn-primary" style="margin-bottom:16px" onclick="showStartFieldModal()">+ Start New Field</button>
@@ -807,11 +979,16 @@
     <!-- FILL -->
     <div class="page" id="page-fill">
         <div class="page-header">
-            <div class="fill-title-row">
+            <div class="header-title-row">
                 <h1>Fill Up</h1>
-                <button class="btn btn-secondary btn-sm" id="fill-mode-toggle-btn" onclick="toggleFillMode()">Tractor</button>
+                <button class="menu-trigger" onclick="toggleMainMenu()" aria-label="Open menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="7" x2="20" y2="7"/>
+                        <line x1="4" y1="12" x2="20" y2="12"/>
+                        <line x1="4" y1="17" x2="20" y2="17"/>
+                    </svg>
+                </button>
             </div>
-            <p>Log a refill event</p>
         </div>
         <div class="content">
             <div id="fill-no-fields" style="display:none" class="empty">
@@ -826,26 +1003,41 @@
             </div>
             <div id="fill-form-wrap">
                 <div class="input-group">
-                    <label class="input-label">Select Field</label>
                     <select id="fill-field-select" onchange="onFillFieldChange()">
                         <option value="">-- choose field --</option>
                     </select>
                 </div>
                 <div id="fill-field-info" style="display:none">
-                    <div class="stat-grid" id="fill-stats-grid"></div>
+                    <div class="card fill-summary-card">
+                        <div class="fill-summary-top">
+                            <div class="card-title" style="margin-bottom:0;font-size:16px">Current Status</div>
+                            <button class="btn btn-secondary btn-sm" onclick="toggleFillSummary()" id="fill-summary-toggle-btn">Expand</button>
+                        </div>
+                        <div class="fill-summary-collapsed-preview" id="fill-summary-collapsed-preview">
+                            <div class="info-row">
+                                <span class="info-key">Gal Needed To Finish</span>
+                                <span class="info-val" id="fill-summary-collapsed-gal-needed">—</span>
+                            </div>
+                        </div>
+                        <div class="fill-summary-body" id="fill-summary-body">
+                            <div class="fill-summary-list" id="fill-summary-list"></div>
+                            <div class="settings-item-sub">Gal To Finish = Remaining Acres × Target Gal/Acre</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fill-toggle-row">
+                    <button class="btn btn-secondary btn-sm" id="fill-mode-toggle-btn" onclick="toggleFillMode()">Tractor</button>
                 </div>
                 <div id="fill-tractor-wrap">
                     <div class="card">
                         <div class="card-title">Before Fill</div>
                         <div class="input-group" style="margin-bottom:0">
-                            <label class="input-label">Gallons in tank NOW (before filling)</label>
                             <input type="number" id="fill-before" placeholder="e.g. 120" inputmode="decimal" oninput="calcFillPreview()">
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-title">After Fill</div>
                         <div class="input-group" style="margin-bottom:0">
-                            <label class="input-label">Gallons in tank AFTER filling</label>
                             <div class="num-row">
                                 <input type="number" id="fill-after" placeholder="e.g. 800" inputmode="decimal" oninput="calcFillPreview()">
                                 <div class="num-btn" onclick="fillFullTank()" title="Full tank">⬆</div>
@@ -856,9 +1048,7 @@
                     <div class="card">
                         <div class="card-title">Tender Truck</div>
                         <div class="input-group" style="margin-bottom:0">
-                            <label class="input-label">Tender gallons after this fill</label>
                             <input type="number" id="fill-tender-after" placeholder="Auto from last level" inputmode="decimal" oninput="onFillTenderAfterInput()">
-                            <div class="settings-item-sub" id="fill-tender-note" style="margin-top:6px">Auto-calculated from last tender level minus this fill.</div>
                         </div>
                     </div>
                     <div id="fill-preview" style="display:none" class="card">
@@ -943,14 +1133,23 @@
     <!-- LOG -->
     <div class="page" id="page-log">
         <div class="page-header">
-            <h1>Log</h1>
-            <p>All fill entries</p>
+            <div class="header-title-row">
+                <h1>Log</h1>
+                <button class="menu-trigger" onclick="toggleMainMenu()" aria-label="Open menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="7" x2="20" y2="7"/>
+                        <line x1="4" y1="12" x2="20" y2="12"/>
+                        <line x1="4" y1="17" x2="20" y2="17"/>
+                    </svg>
+                </button>
+            </div>
         </div>
         <div class="content">
             <div class="input-group">
                 <label class="input-label">Filter by field</label>
                 <select id="log-filter" onchange="renderLog()">
                     <option value="">All fields</option>
+                    <option value="__active__">Active fields</option>
                 </select>
             </div>
             <div id="log-list"></div>
@@ -960,53 +1159,58 @@
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
         <div class="page-header">
-            <h1>Settings</h1>
-            <p>Tank &amp; field configuration</p>
+            <div class="header-title-row">
+                <h1>Settings</h1>
+                <button class="menu-trigger" onclick="toggleMainMenu()" aria-label="Open menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="7" x2="20" y2="7"/>
+                        <line x1="4" y1="12" x2="20" y2="12"/>
+                        <line x1="4" y1="17" x2="20" y2="17"/>
+                    </svg>
+                </button>
+            </div>
         </div>
         <div class="content">
             <div class="card">
                 <div class="card-title">Units</div>
-                <div class="input-group">
-                    <label class="input-label">Active Unit</label>
-                    <select id="settings-unit-select" onchange="onSettingsUnitChange()"></select>
-                </div>
                 <div id="settings-units-list" style="margin-bottom:12px"></div>
-                <hr class="divider">
-                <div class="section-title">Add New Unit</div>
-                <div class="input-group">
-                    <label class="input-label">Unit Name</label>
-                    <input type="text" id="new-unit-name" placeholder="e.g. Planter">
-                </div>
-                <button class="btn btn-secondary" onclick="addUnit()">Add Unit</button>
-            </div>
-            <div class="card">
-                <div class="card-title">Tank</div>
-                <div class="input-group" style="margin-bottom:0">
-                    <label class="input-label">Tank Capacity (gallons)</label>
-                    <input type="number" id="set-tank-cap" placeholder="e.g. 1000" inputmode="decimal" onchange="saveTankSettings()">
-                </div>
+                <button class="btn btn-secondary" onclick="openModal('modal-add-unit')">Add Unit</button>
             </div>
             <div class="card">
                 <div class="card-title">Fields</div>
                 <div id="settings-fields-list"></div>
-                <hr class="divider">
-                <div class="section-title">Add New Field</div>
-                <div class="input-group">
-                    <label class="input-label">Field Name</label>
-                    <input type="text" id="new-field-name" placeholder="e.g. North 40">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Acres</label>
-                    <input type="number" id="new-field-acres" placeholder="40" inputmode="decimal">
-                </div>
-                <button class="btn btn-secondary" onclick="addField()">Add Field</button>
+                <button class="btn btn-secondary" onclick="openModal('modal-add-field')">Add Field</button>
             </div>
             <div class="card">
                 <div class="card-title">Data</div>
-                <button class="btn btn-secondary" style="margin-bottom:8px;border-color:var(--accent);color:var(--accent)" onclick="exportAllPDF()">📄 Export All Fields PDF</button>
-                <button class="btn btn-secondary" style="margin-bottom:8px" onclick="exportData()">Export JSON Backup</button>
-                <button class="btn btn-danger" style="margin-bottom:8px" onclick="confirmClearRecords()">Clear Field Records</button>
-                <button class="btn btn-danger" onclick="confirmClearAll()">Clear All Fields &amp; Data</button>
+                <button class="btn btn-secondary" onclick="showPage('data')">DATA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATA -->
+    <div class="page" id="page-data">
+        <div class="page-header">
+            <div class="header-title-row">
+                <h1>Data</h1>
+                <button class="menu-trigger" onclick="toggleMainMenu()" aria-label="Open menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="4" y1="7" x2="20" y2="7"/>
+                        <line x1="4" y1="12" x2="20" y2="12"/>
+                        <line x1="4" y1="17" x2="20" y2="17"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="content">
+            <div class="card">
+                <div class="card-title">Current Unit</div>
+                <div class="settings-item-sub" id="data-unit-name" style="margin-bottom:10px">—</div>
+                <button class="btn btn-secondary" style="margin-bottom:8px;border-color:var(--accent);color:var(--accent)" onclick="exportUnitSummaryPDF()">📄 Export Unit Summary PDF</button>
+                <button class="btn btn-secondary" style="margin-bottom:8px" onclick="exportData()">Export Unit JSON Backup</button>
+                <button class="btn btn-danger" style="margin-bottom:8px" onclick="confirmClearRecords()">Delete Unit Fill Logs</button>
+                <button class="btn btn-danger" style="margin-bottom:8px" onclick="confirmClearAll()">Clear Unit Fields &amp; Data</button>
+                <button class="btn btn-secondary" onclick="showPage('settings')">Back to Settings</button>
             </div>
         </div>
     </div>
@@ -1044,15 +1248,6 @@
                 Log
               
         </button>
-        <button class="nav-btn" id="nav-settings" onclick="showPage('settings')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-            </svg>
-
-                Settings
-              
-        </button>
     </nav>
 
     <!-- MODAL: START FIELD -->
@@ -1080,6 +1275,48 @@
             <div class="btn-row" style="margin-top:16px">
                 <button class="btn btn-secondary" onclick="closeModal('modal-start')">Cancel</button>
                 <button class="btn btn-primary" onclick="startField()">Start Field</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD UNIT -->
+    <div class="modal-overlay" id="modal-add-unit">
+        <div class="modal">
+            <div class="modal-title">Add Unit</div>
+            <div class="input-group">
+                <label class="input-label">Unit Name</label>
+                <input type="text" id="new-unit-name" placeholder="e.g. Planter">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Tank Capacity (gallons)</label>
+                <input type="number" id="new-unit-tank-capacity" placeholder="e.g. 1000" inputmode="decimal">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Default starting tender gallons (optional)</label>
+                <input type="number" id="new-unit-default-tender" placeholder="e.g. 2500" inputmode="decimal">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="closeModal('modal-add-unit')">Cancel</button>
+                <button class="btn btn-primary" onclick="addUnit()">Add Unit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD FIELD -->
+    <div class="modal-overlay" id="modal-add-field">
+        <div class="modal">
+            <div class="modal-title">Add Field</div>
+            <div class="input-group">
+                <label class="input-label">Field Name</label>
+                <input type="text" id="new-field-name" placeholder="e.g. North 40">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Acres</label>
+                <input type="number" id="new-field-acres" placeholder="40" inputmode="decimal">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="closeModal('modal-add-field')">Cancel</button>
+                <button class="btn btn-primary" onclick="addField()">Add Field</button>
             </div>
         </div>
     </div>
@@ -1121,6 +1358,29 @@
                 <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-fill')">Cancel</button>
                 <button class="btn btn-primary" style="flex:1" onclick="saveEditFill()">Save</button>
                 <button class="btn btn-danger" style="flex:0;padding:14px 16px;font-size:16px" onclick="deleteEditFill()">🗑</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT START -->
+    <div class="modal-overlay" id="modal-edit-start">
+        <div class="modal">
+            <div class="modal-title">Edit Field Start</div>
+            <div class="input-group">
+                <label class="input-label">Target Gal/Acre</label>
+                <input type="number" id="edit-start-rate" inputmode="decimal">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Starting tractor gallons</label>
+                <input type="number" id="edit-start-gallons" inputmode="decimal">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Starting tender gallons</label>
+                <input type="number" id="edit-start-tender-gallons" inputmode="decimal">
+            </div>
+            <div style="display:flex;gap:10px;margin-top:8px">
+                <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-start')">Cancel</button>
+                <button class="btn btn-primary" style="flex:1" onclick="saveEditStart()">Save</button>
             </div>
         </div>
     </div>
@@ -1194,6 +1454,7 @@
     function getDefaultState() {
         return {
             tankCapacity: 1000,
+            defaultStartTenderGal: null,
             fields: [],
             sessions: [],
             logDoneExpanded: {}
@@ -1223,6 +1484,11 @@
             merged.sessions = [];
         if (!merged.logDoneExpanded || typeof merged.logDoneExpanded !== 'object' || Array.isArray(merged.logDoneExpanded)) {
             merged.logDoneExpanded = {};
+        }
+        if (isNaN(Number(merged.tankCapacity)) || Number(merged.tankCapacity) <= 0)
+            merged.tankCapacity = 1000;
+        if (merged.defaultStartTenderGal != null && (isNaN(Number(merged.defaultStartTenderGal)) || Number(merged.defaultStartTenderGal) < 0)) {
+            merged.defaultStartTenderGal = null;
         }
         return merged;
     }
@@ -1544,6 +1810,22 @@
         }
         return sess.startGal + added + pauseAdj; // active/paused: max possible applied
     }
+    function getCurrentLoadGallons(sess) {
+        const tractorFills = getTractorFills(sess);
+        if (tractorFills.length > 0) {
+            return Math.max(0, Number(tractorFills[tractorFills.length - 1].after) || 0);
+        }
+        return Math.max(0, Number(sess && sess.startGal) || 0);
+    }
+    function sessAppliedForCoverage(sess) {
+        if (!sess)
+            return 0;
+        if (sess.status === 'done' && sess.endGal != null)
+            return sessApplied(sess);
+        const tractorFills = getTractorFills(sess);
+        const appliedByCompletedLoads = tractorFills.slice(0, -1).reduce((acc, f) => acc + fillAddedGal(f), 0);
+        return Math.max(0, Number(sess.startGal || 0) + appliedByCompletedLoads + sessPauseTractorAdjustment(sess));
+    }
     function sessAvgFillInterval(sess) {
         const fills = getTractorFills(sess);
         if (fills.length < 2)
@@ -1617,18 +1899,14 @@
         renderFillPage();
         renderLog();
         renderSettings();
+        renderDataPage();
     }
     function renderUnitSelectors() {
         const options = unitsMeta.units.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
-        const globalSel = document.getElementById('global-unit-select');
-        if (globalSel) {
-            globalSel.innerHTML = options;
-            globalSel.value = unitsMeta.currentUnitId;
-        }
-        const settingsSel = document.getElementById('settings-unit-select');
-        if (settingsSel) {
-            settingsSel.innerHTML = options;
-            settingsSel.value = unitsMeta.currentUnitId;
+        const menuSel = document.getElementById('menu-unit-select');
+        if (menuSel) {
+            menuSel.innerHTML = options;
+            menuSel.value = unitsMeta.currentUnitId;
         }
     }
     function renderSettingsUnitsList() {
@@ -1686,17 +1964,26 @@
             renderUnitSelectors();
         });
     }
-    function onGlobalUnitChange() {
-        handleUnitSelectChange('global-unit-select');
-    }
-    function onSettingsUnitChange() {
-        handleUnitSelectChange('settings-unit-select');
+    function onMenuUnitChange() {
+        handleUnitSelectChange('menu-unit-select');
     }
     function addUnit() {
         const input = document.getElementById('new-unit-name');
+        const capInput = document.getElementById('new-unit-tank-capacity');
+        const tenderInput = document.getElementById('new-unit-default-tender');
         const name = input.value.trim();
+        const cap = parseFloat(capInput.value);
+        const defaultTenderRaw = parseFloat(tenderInput.value);
         if (!name) {
             showToast('Enter a unit name', true);
+            return;
+        }
+        if (isNaN(cap) || cap <= 0) {
+            showToast('Enter valid tank capacity', true);
+            return;
+        }
+        if (!isNaN(defaultTenderRaw) && defaultTenderRaw < 0) {
+            showToast('Default tender gallons must be 0 or greater', true);
             return;
         }
         if (unitsMeta.units.some(u => u.name.toLowerCase() === name.toLowerCase())) {
@@ -1711,9 +1998,14 @@
         unitsMeta.currentUnitId = unitId;
         saveUnitsMeta();
         state = getDefaultState();
+        state.tankCapacity = cap;
+        state.defaultStartTenderGal = isNaN(defaultTenderRaw) ? null : defaultTenderRaw;
         saveStateToLocal(unitId, state);
         saveStateToFirestore(unitId, state).catch(() => {});
         input.value = '';
+        capInput.value = '';
+        tenderInput.value = '';
+        closeModal('modal-add-unit');
         renderUnitSelectors();
         renderAllPages();
         showToast('Unit added: ' + name);
@@ -1723,7 +2015,9 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('page-' + name).classList.add('active');
-        document.getElementById('nav-' + name).classList.add('active');
+        const navTarget = document.getElementById('nav-' + name);
+        if (navTarget)
+            navTarget.classList.add('active');
         if (name === 'home')
             renderHome();
         if (name === 'fill')
@@ -1732,6 +2026,8 @@
             renderLog();
         if (name === 'settings')
             renderSettings();
+        if (name === 'data')
+            renderDataPage();
     }
     function openModal(id) {
         document.getElementById(id).classList.add('open');
@@ -1739,13 +2035,22 @@
     function closeModal(id) {
         document.getElementById(id).classList.remove('open');
     }
+    function toggleMainMenu() {
+        const overlay = document.getElementById('menu-overlay');
+        const panel = document.getElementById('menu-panel');
+        overlay.classList.toggle('open');
+        panel.classList.toggle('open');
+    }
+    function closeMainMenu() {
+        const overlay = document.getElementById('menu-overlay');
+        const panel = document.getElementById('menu-panel');
+        overlay.classList.remove('open');
+        panel.classList.remove('open');
+    }
 
     // ==================== HOME ====================
     function renderHome() {
         const open = getOpenSessions();
-        const activeCount = getActiveSessions().length;
-        const pausedCount = open.length - activeCount;
-        document.getElementById('home-subtitle').textContent = getCurrentUnitName() + ' · ' + activeCount + ' active' + (pausedCount ? (' · ' + pausedCount + ' paused') : '');
         const al = document.getElementById('active-fields-list');
         al.innerHTML = open.length === 0
         ? `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>No active fields.<br>Tap "+ Start New Field" above.</div>`
@@ -1758,7 +2063,7 @@
         const field = getField(sess.fieldId);
         if (!field)
             return '';
-        const applied = sessApplied(sess);
+        const applied = sessAppliedForCoverage(sess);
         const added = sessGallonsAdded(sess);
         const tenderStart = sessStartTenderGal(sess);
         const tenderCurrent = sessTenderCurrent(sess);
@@ -1787,7 +2092,7 @@
         : '<span class="badge badge-done">Done</span>';
         const elapsed = sess.status === 'done' && sess.endTime
         ? `<div class="info-row"><span class="info-key">Total time on field</span><span class="info-val">${fmtDuration(sess.endTime - sess.startTime)}</span></div>`
-        : `<div class="info-row"><span class="info-key">Started</span><span class="info-val">${fmtTime(sess.startTime)}</span></div>`;
+        : `<div class="info-row field-wording-strong"><span class="info-key">Started</span><span class="info-val">${fmtTime(sess.startTime)}</span></div>`;
         const finBtn = sess.status === 'active'
         ? `<div class="btn-row" style="margin-top:10px"><button class="btn btn-secondary btn-sm" style="font-size:14px" onclick="openPauseModal('${sess.id}')">Pause</button><button class="btn btn-secondary btn-sm" style="font-size:14px" onclick="openFinishModal('${sess.id}')">Finish Field</button></div>`
         : sess.status === 'paused'
@@ -1820,17 +2125,24 @@
 
         pct}%;background:${progColor}"></div></div>
       </div>
-      <div class="info-row"><span class="info-key">Gal needed to finish</span><span class="info-val">${
+      <div class="info-row readout-row"><span class="info-key">Gal needed to finish</span><span class="info-val">${
         fmtGal(galNeeded)}</span></div>
-      <div class="info-row"><span class="info-key">Fills needed to finish</span><span class="info-val">${fillupsNeededText}</span></div>
-      <div class="info-row"><span class="info-key">Total gal loaded</span><span class="info-val">${fmtGal(added)}</span></div>
-      ${sess.status === 'active' ? `<div class="info-row"><span class="info-key">Tender current</span><span class="info-val">${fmtGal(tenderCurrent)}</span></div>` : `<div class="info-row"><span class="info-key">Tender start</span><span class="info-val">${fmtGal(tenderStart)}</span></div>
+      <div class="info-row readout-row"><span class="info-key">Loads needed to finish</span><span class="info-val">${fillupsNeededText}</span></div>
+      <div class="info-row readout-row"><span class="info-key">Total gal loaded</span><span class="info-val">${fmtGal(added)}</span></div>
+      ${sess.status === 'active' ? `<div class="info-row field-wording-strong"><span class="info-key">Tender current</span><span class="info-val">${fmtGal(tenderCurrent)}</span></div>` : `<div class="info-row"><span class="info-key">Tender start</span><span class="info-val">${fmtGal(tenderStart)}</span></div>
            <div class="info-row"><span class="info-key">Tender end</span><span class="info-val">${fmtGal(tenderEnd)}</span></div>`}
       ${elapsed}
       ${avgFill != null ? `<div class="info-row"><span class="info-key">Avg time between fills</span><span class="info-val">${fmtDuration(avgFill)}</span></div>` : ''}
       ${finBtn}
+      <div class="field-notes-wrap">
+        <label class="input-label">Notes</label>
+        <textarea placeholder="Add field notes..." oninput="updateFieldNote('${
+
+        field.id}', this.value)">${field.notes || ''}</textarea>
+      </div>
     </div>
   </div>`
+
 
         ;
     }
@@ -1842,7 +2154,8 @@
         state.fields.map(f => `<option value="${f.id}">${f.name} (${f.acres} ac)</option>`).join('');
         document.getElementById('start-rate').value = '';
         document.getElementById('start-gallons').value = '';
-        document.getElementById('start-tender-gallons').value = '';
+        const defaultTender = Number(state.defaultStartTenderGal);
+        document.getElementById('start-tender-gallons').value = isNaN(defaultTender) ? '' : defaultTender;
         openModal('modal-start');
     }
     function startField() {
@@ -1948,6 +2261,7 @@
     let _fillMode = 'tractor';
     let _pauseResumeSessId = null;
     let _pauseResumeAction = 'pause';
+    let _fillSummaryExpanded = true;
 
     function toggleFillMode() {
         setFillMode(_fillMode === 'tractor' ? 'tender' : 'tractor');
@@ -1968,6 +2282,18 @@
             calcFillPreview();
         else
             calcTenderRefillPreview();
+    }
+    function toggleFillSummary() {
+        _fillSummaryExpanded = !_fillSummaryExpanded;
+        const body = document.getElementById('fill-summary-body');
+        const preview = document.getElementById('fill-summary-collapsed-preview');
+        const btn = document.getElementById('fill-summary-toggle-btn');
+        if (body)
+            body.classList.toggle('collapsed', !_fillSummaryExpanded);
+        if (preview)
+            preview.classList.toggle('open', !_fillSummaryExpanded);
+        if (btn)
+            btn.textContent = _fillSummaryExpanded ? 'Collapse' : 'Expand';
     }
 
     function currentTenderBaselineForRefill(sess) {
@@ -2014,6 +2340,15 @@
             sel.value = active[0].id;
         buildFillChips();
         setFillMode(_fillMode);
+        const body = document.getElementById('fill-summary-body');
+        const preview = document.getElementById('fill-summary-collapsed-preview');
+        const btn = document.getElementById('fill-summary-toggle-btn');
+        if (body)
+            body.classList.toggle('collapsed', !_fillSummaryExpanded);
+        if (preview)
+            preview.classList.toggle('open', !_fillSummaryExpanded);
+        if (btn)
+            btn.textContent = _fillSummaryExpanded ? 'Collapse' : 'Expand';
         onFillFieldChange();
     }
     function buildFillChips() {
@@ -2049,15 +2384,32 @@
         if (!sess)
             return;
         const field = getField(sess.fieldId);
-        const applied = sessApplied(sess);
+        const applied = sessAppliedForCoverage(sess);
         const rate = sess ? sess.rate : 0;
-        const acCov = rate > 0 ? (applied / rate).toFixed(1) : '—';
-        const acLeft = rate > 0 ? Math.max(0, field.acres - applied / rate).toFixed(1) : '—';
-        document.getElementById('fill-stats-grid').innerHTML = `
-    <div class="stat-box"><div class="stat-val">${fmtNum(applied, 0)}<span style="font-size:11px"> gal</span></div><div class="stat-label">Applied</div></div>
-    <div class="stat-box"><div class="stat-val">${tractorFillCount(sess)}</div><div class="stat-label">Fills</div></div>
-    <div class="stat-box"><div class="stat-val">${acCov}<span style="font-size:11px"> ac</span></div><div class="stat-label">Covered</div></div>
-    <div class="stat-box"><div class="stat-val warn">${acLeft}<span style="font-size:11px"> ac</span></div><div class="stat-label">Left</div></div>`;
+        const acCovNum = rate > 0 ? (applied / rate) : null;
+        const acCov = acCovNum != null ? acCovNum.toFixed(1) : '—';
+        const acLeftNum = acCovNum != null ? Math.max(0, field.acres - acCovNum) : null;
+        const acLeft = acLeftNum != null ? acLeftNum.toFixed(1) : '—';
+        const galNeeded = acLeftNum != null ? Math.max(0, acLeftNum * rate) : null;
+        const currentLoad = getCurrentLoadGallons(sess);
+        const loadsNeeded = galNeeded != null
+        ? (currentLoad > 0 ? Math.max(0, galNeeded - currentLoad) / Math.max(1, state.tankCapacity || 0) : galNeeded / Math.max(1, state.tankCapacity || 0))
+        : null;
+        const summaryList = document.getElementById('fill-summary-list');
+        if (summaryList) {
+            summaryList.innerHTML = `
+      <div class="info-row"><span class="info-key">Applied</span><span class="info-val">${fmtNum(applied, 0)} gal</span></div>
+      <div class="info-row"><span class="info-key">Total Loads</span><span class="info-val">${tractorFillCount(sess)}</span></div>
+      <div class="info-row"><span class="info-key">Covered</span><span class="info-val">${acCov} ac</span></div>
+      <div class="info-row"><span class="info-key">Remaining</span><span class="info-val">${acLeft} ac</span></div>
+      <div class="info-row"><span class="info-key">Gal To Finish</span><span class="info-val">${fmtGal(galNeeded)}</span></div>
+      <div class="info-row"><span class="info-key">Loads To Finish</span><span class="info-val">${loadsNeeded != null ? fmtNum(loadsNeeded, 1) : '—'}</span></div>
+    `
+            ;
+        }
+        const collapsedNeeded = document.getElementById('fill-summary-collapsed-gal-needed');
+        if (collapsedNeeded)
+            collapsedNeeded.textContent = fmtGal(galNeeded);
         infoBox.style.display = 'block';
         updateTenderRefillBaselineUI(sess);
         calcFillPreview();
@@ -2065,9 +2417,6 @@
     }
     function onFillTenderAfterInput() {
         _fillTenderManualOverride = true;
-        const note = document.getElementById('fill-tender-note');
-        if (note)
-            note.textContent = 'Manual override enabled for this fill.';
         calcFillPreview();
     }
     function calcFillPreview() {
@@ -2082,16 +2431,13 @@
         const added = after - before;
         const sess = getSession(sessId);
         const field = getField(sess.fieldId);
-        const currentApplied = sessApplied(sess);
+        const currentApplied = sessAppliedForCoverage(sess);
         const tenderBefore = sessTenderCurrent(sess);
         const fillUsed = Math.max(0, after - before);
         const tenderSuggested = Math.max(0, tenderBefore - fillUsed);
         const tenderInput = document.getElementById('fill-tender-after');
         if (!_fillTenderManualOverride && tenderInput) {
             tenderInput.value = String(Math.round(tenderSuggested * 10) / 10);
-            const note = document.getElementById('fill-tender-note');
-            if (note)
-                note.textContent = 'Auto-calculated from last tender level minus this fill.';
         }
         const tenderAfterEntered = parseFloat(tenderInput.value);
         const tenderAfterPreview = !isNaN(tenderAfterEntered) ? tenderAfterEntered : tenderSuggested;
@@ -2189,9 +2535,6 @@
         document.getElementById('fill-before').value = '';
         document.getElementById('fill-after').value = '';
         document.getElementById('fill-tender-after').value = '';
-        const note = document.getElementById('fill-tender-note');
-        if (note)
-            note.textContent = 'Auto-calculated from last tender level minus this fill.';
         _fillTenderManualOverride = false;
         document.getElementById('fill-preview').style.display = 'none';
         onFillFieldChange();
@@ -2250,14 +2593,17 @@
     function renderLog() {
         const filter = document.getElementById('log-filter');
         const prev = filter.value;
-        filter.innerHTML = '<option value="">All fields</option>' +
+        filter.innerHTML = '<option value="">All fields</option><option value="__active__">Active fields</option>' +
         state.fields.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
         if (prev)
             filter.value = prev;
         const fid = filter.value;
+        const activeFieldIds = new Set(getActiveSessions().map(s => s.fieldId));
         const items = [];
         for (const sess of state.sessions) {
-            if (fid && sess.fieldId !== fid)
+            if (fid && fid !== '__active__' && sess.fieldId !== fid)
+                continue;
+            if (fid === '__active__' && !activeFieldIds.has(sess.fieldId))
                 continue;
             const field = getField(sess.fieldId);
             const fname = field ? field.name : 'Unknown';
@@ -2326,7 +2672,7 @@
             if (e.kind === 'done-summary') {
                 const sess = e.sess;
                 const field = e.field;
-                const applied = sessApplied(sess);
+                const applied = sessAppliedForCoverage(sess);
                 const loadCount = tractorFillCount(sess);
                 const truckCount = tenderTruckCount(sess);
                 const tenderRefillGal = tenderRefillTotalGallons(sess);
@@ -2334,6 +2680,10 @@
                 const tenderEnd = sess.endTenderGal != null ? Math.max(0, Number(sess.endTenderGal) || 0) : sessTenderCurrent(sess);
                 const tenderTotal = Math.max(0, tenderStart - tenderEnd);
                 const expanded = !!(state.logDoneExpanded && state.logDoneExpanded[sess.id]);
+                const fieldAcres = field && !isNaN(Number(field.acres)) ? Number(field.acres) : null;
+                const coveredAc = sess.status === 'done'
+                ? fieldAcres
+                : (sess.rate > 0 ? (applied / Number(sess.rate)) : null);
                 const galPerAc = field && Number(field.acres) > 0 ? (applied / Number(field.acres)) : null;
                 const tractorFills = getTractorFills(sess);
                 const fillRows = tractorFills.length
@@ -2350,36 +2700,48 @@
           <span class="badge badge-done">Done</span>
         </div>
         <div class="field-card-body">
-          <div class="info-row"><span class="info-key">Applied</span><span class="info-val">${
+          <div class="done-preview-grid">
+            <div class="stat-box"><div class="stat-val">${
 
 
 
-                fmtGal(applied)}</span></div>
+
+                coveredAc != null ? fmtNum(coveredAc, 1) : '—'}<span style="font-size:11px"> ac</span></div><div class="stat-label">Covered</div></div>
+            <div class="stat-box"><div class="stat-val">${galPerAc != null ? fmtNum(galPerAc, 2) : '—'}<span style="font-size:11px"> gal/ac</span></div><div class="stat-label">Gal Per Acre</div></div>
+          </div>
+          ${
+                expanded ? `<hr class="divider"><div class="info-row"><span class="info-key">Applied</span><span class="info-val">${fmtGal(applied)}</span></div>
           <div class="info-row"><span class="info-key">Load counter</span><span class="info-val">${loadCount}</span></div>
           <div class="info-row"><span class="info-key">Trucks</span><span class="info-val">${truckCount}</span></div>
           <div class="info-row"><span class="info-key">Tender truck gal</span><span class="info-val">${fmtGal(tenderRefillGal)}</span></div>
           <div class="info-row"><span class="info-key">Total tender gal</span><span class="info-val">${fmtGal(tenderTotal)}</span></div>
-          <div class="btn-row" style="margin-top:8px">
-            <button class="btn btn-secondary btn-sm" style="font-size:13px" onclick="toggleDoneLogSummary('${
-                sess.id}')">${expanded ? 'Collapse' : 'Expand'}</button>
-            <button class="btn btn-secondary btn-sm" style="font-size:13px;border-color:var(--accent);color:var(--accent)" onclick="exportSessionPDF('${sess.id}')">📄 Save PDF</button>
-          </div>
-          ${
-                expanded ? `<hr class="divider"><div class="info-row"><span class="info-key">Gal/ac applied</span><span class="info-val">${galPerAc != null ? fmtNum(galPerAc, 2) + ' gal/ac' : '—'}</span></div>
+          <div class="info-row"><span class="info-key">Gal/ac applied</span><span class="info-val">${galPerAc != null ? fmtNum(galPerAc, 2) + ' gal/ac' : '—'}</span></div>
           <div class="info-row"><span class="info-key">Tank start → end</span><span class="info-val">${fmtGal(sess.startGal)} → ${sess.endGal != null ? fmtGal(sess.endGal) : '—'}</span></div>
           <div class="info-row"><span class="info-key">Tender start → end</span><span class="info-val">${fmtGal(tenderStart)} → ${fmtGal(tenderEnd)}</span></div>
           <div class="info-row"><span class="info-key">Total time</span><span class="info-val">${sess.endTime ? fmtDuration(sess.endTime - sess.startTime) : '—'}</span></div>
           <hr class="divider"><div class="section-title" style="margin-bottom:8px">Load Summary</div>${fillRows}` : ''}
+          <div class="log-done-footer">
+            <div class="btn-row">
+              <button class="btn btn-secondary btn-sm" style="font-size:13px" onclick="toggleDoneLogSummary('${
+
+                sess.id}')">${expanded ? 'Collapse' : 'Expand'}</button>
+              <button class="btn btn-secondary btn-sm" style="font-size:13px;border-color:var(--accent);color:var(--accent)" onclick="exportSessionPDF('${sess.id}')">📄 Save PDF</button>
+            </div>
+          </div>
         </div>
       </div>`
+
+
 
                 ;
             }
             const editBtn = e.type === 'fill'
             ? `<button class="btn btn-secondary btn-sm" style="margin-top:5px;font-size:11px;padding:4px 10px" onclick="openEditFill('${e.sessId}','${e.fillId}')">Edit</button>`
+            : (e.type === 'start'
+            ? `<button class="btn btn-secondary btn-sm" style="margin-top:5px;font-size:11px;padding:4px 10px" onclick="openEditStart('${e.sessId}')">Edit</button>`
             : (e.type === 'tender'
             ? `<button class="btn btn-secondary btn-sm" style="margin-top:5px;font-size:11px;padding:4px 10px" onclick="openEditTenderRefill('${e.sessId}','${e.fillId}')">Edit</button>`
-            : '');
+            : ''));
             return `<div class="log-item">
       <div class="log-item-info">
         <div class="log-item-type" style="color:${
@@ -2460,6 +2822,47 @@
         closeModal('modal-edit-fill');
         renderLog();
         showToast('Entry deleted');
+    }
+
+    let _editStartSessId = null;
+    function openEditStart(sessId) {
+        _editStartSessId = sessId;
+        const sess = getSession(sessId);
+        if (!sess)
+            return;
+        document.getElementById('edit-start-rate').value = isNaN(Number(sess.rate)) ? '' : Number(sess.rate);
+        document.getElementById('edit-start-gallons').value = isNaN(Number(sess.startGal)) ? '' : Number(sess.startGal);
+        document.getElementById('edit-start-tender-gallons').value = isNaN(Number(sess.startTenderGal)) ? '' : Number(sess.startTenderGal);
+        openModal('modal-edit-start');
+    }
+    function saveEditStart() {
+        const sess = getSession(_editStartSessId);
+        if (!sess)
+            return;
+        const rate = parseFloat(document.getElementById('edit-start-rate').value);
+        const startGal = parseFloat(document.getElementById('edit-start-gallons').value);
+        const startTenderGal = parseFloat(document.getElementById('edit-start-tender-gallons').value);
+        if (isNaN(rate) || rate <= 0) {
+            showToast('Enter valid gal/ac rate', true);
+            return;
+        }
+        if (isNaN(startGal) || startGal < 0) {
+            showToast('Enter valid starting tractor gallons', true);
+            return;
+        }
+        if (isNaN(startTenderGal) || startTenderGal < 0) {
+            showToast('Enter valid starting tender gallons', true);
+            return;
+        }
+        sess.rate = rate;
+        sess.startGal = startGal;
+        sess.startTenderGal = startTenderGal;
+        if (sess.status === 'done')
+            sess.endTenderGal = sessTenderCurrent(sess);
+        saveState();
+        closeModal('modal-edit-start');
+        renderAllPages();
+        showToast('Field start updated');
     }
 
     function openEditTenderRefill(sessId, fillId) {
@@ -2632,16 +3035,13 @@
     function renderSettings() {
         renderUnitSelectors();
         renderSettingsUnitsList();
-        document.getElementById('set-tank-cap').value = state.tankCapacity || '';
         renderSettingsFields();
     }
-    function saveTankSettings() {
-        const cap = parseFloat(document.getElementById('set-tank-cap').value);
-        if (!isNaN(cap) && cap > 0) {
-            state.tankCapacity = cap;
-            saveState();
-            showToast('Tank capacity saved');
-        }
+    function renderDataPage() {
+        renderUnitSelectors();
+        const unitEl = document.getElementById('data-unit-name');
+        if (unitEl)
+            unitEl.textContent = getCurrentUnitName() + ' (' + getCurrentUnitId() + ')';
     }
     function renderSettingsFields() {
         const list = document.getElementById('settings-fields-list');
@@ -2679,11 +3079,13 @@
         state.fields.push({
             id: uid(),
             name,
-            acres
+            acres,
+            notes: ''
         });
         saveState();
         document.getElementById('new-field-name').value = '';
         document.getElementById('new-field-acres').value = '';
+        closeModal('modal-add-field');
         renderSettingsFields();
         showToast('Field added');
     }
@@ -2702,6 +3104,13 @@
         saveState();
         renderSettingsFields();
         showToast('Field updated');
+    }
+    function updateFieldNote(fid, text) {
+        const field = getField(fid);
+        if (!field)
+            return;
+        field.notes = String(text || '');
+        saveState();
     }
     function deleteField(fid) {
         if (!confirm('Delete this field?'))
@@ -2728,6 +3137,62 @@
         a.click();
         URL.revokeObjectURL(url);
     }
+    function exportUnitSummaryPDF() {
+        const {jsPDF} = window.jspdf;
+        if (!jsPDF) {
+            showToast('PDF library not loaded yet', true);
+            return;
+        }
+        const sessions = state.sessions;
+        if (sessions.length === 0) {
+            showToast('No field records yet', true);
+            return;
+        }
+        if (getOpenSessions().length > 0 && !confirm('This unit has active/paused fields. Continue exporting summary anyway?'))
+            return;
+
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'letter'
+        });
+        const pw = doc.internal.pageSize.getWidth();
+        const ph = doc.internal.pageSize.getHeight();
+        const unitName = getCurrentUnitName();
+        doc.setFillColor(15, 26, 15);
+        doc.rect(0, 0, pw, 24, 'F');
+        doc.setTextColor(126, 200, 80);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.text('UNIT SUMMARY REPORT', 14, 15);
+        doc.setTextColor(90, 122, 80);
+        doc.setFontSize(8);
+        doc.text(unitName + ' · Generated: ' + fmtTime(Date.now()), pw - 14, 15, {
+            align: 'right'
+        });
+
+        let y = 28;
+        sessions.forEach((sess, idx) => {
+            if (idx > 0) {
+                if (y > ph - 60) {
+                    doc.addPage();
+                    y = 14;
+                } else {
+                    y += 4;
+                    doc.setDrawColor(45, 66, 45);
+                    doc.line(14, y, pw - 14, y);
+                    y += 6;
+                }
+            }
+            y = buildSessionPDFDoc(doc, sess, y);
+        });
+        doc.setFontSize(7);
+        doc.setTextColor(90, 122, 80);
+        doc.text('Field Fertilizer Tracker  ·  Unit: ' + unitName + '  ·  ' + sessions.length + ' record(s)', 14, ph - 6);
+        const safe = unitName.replace(/[^a-z0-9]/gi, '_');
+        doc.save('unit-summary-' + safe + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
+        showToast('Unit summary PDF saved!');
+    }
     function confirmClearRecords() {
         if (!confirm('Clear all field records for "' + getCurrentUnitName() + '" (fill-ups and sessions)? Field names and acres will be kept.'))
             return;
@@ -2736,7 +3201,8 @@
         saveState();
         renderHome();
         renderSettings();
-        showToast('Field records cleared');
+        renderDataPage();
+        showToast('Unit fill logs cleared');
     }
     function confirmClearAll() {
         if (!confirm('Clear ALL fields and data for "' + getCurrentUnitName() + '"? Cannot be undone.'))
@@ -2751,6 +3217,7 @@
         renderFillPage();
         renderLog();
         renderSettings();
+        renderDataPage();
         showToast('All data cleared for unit');
     }
 
@@ -2758,13 +3225,16 @@
     function buildSessionPDFDoc(doc, sess, startY) {
         const field = getField(sess.fieldId);
         const fname = field ? field.name : 'Unknown Field';
-        const applied = sessApplied(sess);
+        const applied = sessAppliedForCoverage(sess);
         const added = sessGallonsAdded(sess);
         const loadCount = tractorFillCount(sess);
         const truckCount = tenderTruckCount(sess);
         const tenderTruckGal = tenderRefillTotalGallons(sess);
         const rate = sess.rate || 0;
-        const acCov = rate > 0 ? (applied / rate).toFixed(1) : '—';
+        const fieldAcres = field && !isNaN(Number(field.acres)) ? Number(field.acres) : null;
+        const acCov = sess.status === 'done'
+        ? (fieldAcres != null ? fieldAcres.toFixed(1) : '—')
+        : (rate > 0 ? (applied / rate).toFixed(1) : '—');
         const galPerAcreApplied = field && Number(field.acres) > 0 ? (applied / Number(field.acres)) : null;
         const tenderStart = sessStartTenderGal(sess);
         const tenderEnd = sess.endTenderGal != null ? Math.max(0, Number(sess.endTenderGal) || 0) : sessTenderCurrent(sess);
@@ -3015,6 +3485,7 @@
         renderFillPage();
         renderLog();
         renderSettings();
+        renderDataPage();
     }
     initApp();
     </script>
