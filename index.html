@@ -408,7 +408,28 @@
     }
 
     .field-card-body {
-        padding: 12px 14px
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        height: 100%
+    }
+
+    .field-card-actions {
+        margin-top: auto;
+        padding-top: 10px;
+        border-top: 1px solid var(--border)
+    }
+
+    .field-card-actions .btn {
+        font-size: 14px;
+        padding: 10px 12px;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px rgba(126, 200, 80, .25) inset
+    }
+
+    .field-card-actions .btn-secondary {
+        color: var(--accent);
+        background: var(--surface3)
     }
 
     .badge {
@@ -476,6 +497,46 @@
         white-space: nowrap;
         flex-shrink: 0;
         margin-top: 2px
+    }
+
+    .swipe-log-wrap {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius);
+        margin-bottom: 12px
+    }
+
+    .swipe-log-action {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 88px;
+        border: none;
+        background: var(--danger);
+        color: #fff;
+        font-family: var(--mono);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        display: flex;
+        align-items: center;
+        justify-content: center
+    }
+
+    .swipe-log-content {
+        position: relative;
+        z-index: 1;
+        transition: transform .18s ease;
+        touch-action: pan-y
+    }
+
+    .swipe-log-wrap.open .swipe-log-content {
+        transform: translateX(-88px)
+    }
+
+    .swipe-log-wrap .field-card {
+        margin-bottom: 0
     }
 
     .progress-wrap {
@@ -726,6 +787,48 @@
     .field-notes-wrap textarea {
         min-height: 66px;
         resize: vertical
+    }
+
+    .field-notes-shared {
+        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 132px;
+        overflow-y: auto;
+        padding-right: 4px;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .field-note-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        background: var(--surface3);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 8px
+    }
+
+    .field-note-unit {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--text3);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2px 7px;
+        line-height: 1.2;
+        white-space: nowrap
+    }
+
+    .field-note-text {
+        font-size: 12px;
+        color: var(--text2);
+        line-height: 1.35;
+        white-space: pre-wrap
     }
 
     .done-preview-grid {
@@ -1466,7 +1569,9 @@
             units: [{
                 id: 'striptiller',
                 name: 'Striptiller'
-            }]
+            }],
+            sharedFields: [],
+            sharedFieldNotes: {}
         };
     }
 
@@ -1482,6 +1587,15 @@
             merged.fields = [];
         if (!Array.isArray(merged.sessions))
             merged.sessions = [];
+        const fieldById = {};
+        for (const f of merged.fields) {
+            if (!f || typeof f.id !== 'string')
+                continue;
+            fieldById[f.id] = f;
+        }
+        for (const sess of merged.sessions) {
+            normalizeSessionFieldSnapshot(sess, fieldById);
+        }
         if (!merged.logDoneExpanded || typeof merged.logDoneExpanded !== 'object' || Array.isArray(merged.logDoneExpanded)) {
             merged.logDoneExpanded = {};
         }
@@ -1508,9 +1622,45 @@
         let currentUnitId = typeof input.currentUnitId === 'string' ? input.currentUnitId : cleaned[0].id;
         if (!cleaned.find(u => u.id === currentUnitId))
             currentUnitId = cleaned[0].id;
+        const sharedFields = Array.isArray(input.sharedFields)
+        ? input.sharedFields
+        .filter(f => f && typeof f.id === 'string')
+        .map(f => ({
+            id: f.id,
+            name: String(f.name || '').trim(),
+            acres: Number(f.acres)
+        }))
+        .filter(f => f.id && f.name && !isNaN(f.acres) && f.acres > 0)
+        : [];
+        const sharedFieldNotes = {};
+        if (input.sharedFieldNotes && typeof input.sharedFieldNotes === 'object' && !Array.isArray(input.sharedFieldNotes)) {
+            Object.keys(input.sharedFieldNotes).forEach(key => {
+                const byUnit = input.sharedFieldNotes[key];
+                if (!byUnit || typeof byUnit !== 'object' || Array.isArray(byUnit))
+                    return;
+                const cleanedByUnit = {};
+                Object.keys(byUnit).forEach(unitId => {
+                    const note = byUnit[unitId];
+                    if (!note || typeof note !== 'object')
+                        return;
+                    const text = String(note.text || '').trim();
+                    if (!text)
+                        return;
+                    cleanedByUnit[unitId] = {
+                        text,
+                        unitName: String(note.unitName || '').trim(),
+                        updatedAt: Number(note.updatedAt) || Date.now()
+                    };
+                });
+                if (Object.keys(cleanedByUnit).length > 0)
+                    sharedFieldNotes[key] = cleanedByUnit;
+            });
+        }
         return {
             currentUnitId,
-            units: cleaned
+            units: cleaned,
+            sharedFields,
+            sharedFieldNotes
         };
     }
     function getCurrentUnitId() {
@@ -1519,6 +1669,156 @@
     function getCurrentUnitName() {
         const unit = unitsMeta.units.find(u => u.id === unitsMeta.currentUnitId);
         return unit ? unit.name : 'Unit';
+    }
+    function getUnitNameById(unitId) {
+        const unit = unitsMeta.units.find(u => u.id === unitId);
+        return unit ? unit.name : unitId;
+    }
+    function normalizeFieldKey(name) {
+        return String(name || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    }
+    function getSharedFields() {
+        return Array.isArray(unitsMeta.sharedFields) ? unitsMeta.sharedFields : [];
+    }
+    function syncStateFieldsFromShared() {
+        const shared = getSharedFields();
+        const currentNotesById = {};
+        for (const f of state.fields || []) {
+            if (f && typeof f.id === 'string')
+                currentNotesById[f.id] = String(f.notes || '');
+        }
+        const next = shared.map(f => ({
+            id: f.id,
+            name: f.name,
+            acres: Number(f.acres),
+            notes: currentNotesById[f.id] || ''
+        }));
+        const changed = JSON.stringify((state.fields || []).map(f => ({
+            id: f.id,
+            name: f.name,
+            acres: Number(f.acres)
+        }))) !== JSON.stringify(next.map(f => ({
+            id: f.id,
+            name: f.name,
+            acres: Number(f.acres)
+        })));
+        state.fields = next;
+        return changed;
+    }
+    function migrateCurrentUnitFieldsToShared() {
+        if (!Array.isArray(unitsMeta.sharedFields))
+            unitsMeta.sharedFields = [];
+        const byId = new Set(unitsMeta.sharedFields.map(f => f.id));
+        let changed = false;
+        for (const f of state.fields) {
+            if (!f || typeof f.id !== 'string')
+                continue;
+            const name = String(f.name || '').trim();
+            const acres = Number(f.acres);
+            if (!name || isNaN(acres) || acres <= 0)
+                continue;
+            if (byId.has(f.id))
+                continue;
+            unitsMeta.sharedFields.push({
+                id: f.id,
+                name,
+                acres
+            });
+            byId.add(f.id);
+            changed = true;
+        }
+        return changed;
+    }
+    function renameSharedFieldNotesKey(oldName, newName) {
+        const oldKey = normalizeFieldKey(oldName);
+        const newKey = normalizeFieldKey(newName);
+        if (!oldKey || !newKey || oldKey === newKey)
+            return false;
+        if (!unitsMeta.sharedFieldNotes || typeof unitsMeta.sharedFieldNotes !== 'object' || Array.isArray(unitsMeta.sharedFieldNotes))
+            return false;
+        const oldEntry = unitsMeta.sharedFieldNotes[oldKey];
+        if (!oldEntry || typeof oldEntry !== 'object')
+            return false;
+        const newEntry = unitsMeta.sharedFieldNotes[newKey];
+        if (newEntry && typeof newEntry === 'object') {
+            Object.keys(oldEntry).forEach(unitId => {
+                if (!newEntry[unitId])
+                    newEntry[unitId] = oldEntry[unitId];
+            });
+        } else {
+            unitsMeta.sharedFieldNotes[newKey] = oldEntry;
+        }
+        delete unitsMeta.sharedFieldNotes[oldKey];
+        return true;
+    }
+    function getSharedFieldNotesForField(fieldName) {
+        const key = normalizeFieldKey(fieldName);
+        if (!key)
+            return [];
+        const all = unitsMeta.sharedFieldNotes || {};
+        const byUnit = all[key] || {};
+        return Object.keys(byUnit).map(unitId => {
+            const note = byUnit[unitId] || {};
+            return {
+                unitId,
+                unitName: note.unitName || getUnitNameById(unitId),
+                text: String(note.text || ''),
+                updatedAt: Number(note.updatedAt) || 0
+            };
+        }).filter(n => n.text.trim()).sort((a, b) => {
+            if (a.unitId === getCurrentUnitId())
+                return -1;
+            if (b.unitId === getCurrentUnitId())
+                return 1;
+            return (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0);
+        });
+    }
+    function upsertSharedFieldNoteForField(fieldName, text) {
+        const key = normalizeFieldKey(fieldName);
+        if (!key)
+            return false;
+        if (!unitsMeta.sharedFieldNotes || typeof unitsMeta.sharedFieldNotes !== 'object' || Array.isArray(unitsMeta.sharedFieldNotes)) {
+            unitsMeta.sharedFieldNotes = {};
+        }
+        if (!unitsMeta.sharedFieldNotes[key] || typeof unitsMeta.sharedFieldNotes[key] !== 'object' || Array.isArray(unitsMeta.sharedFieldNotes[key])) {
+            unitsMeta.sharedFieldNotes[key] = {};
+        }
+        const unitId = getCurrentUnitId();
+        const next = String(text || '').trim();
+        const prev = unitsMeta.sharedFieldNotes[key][unitId];
+        if (!next) {
+            if (!prev)
+                return false;
+            delete unitsMeta.sharedFieldNotes[key][unitId];
+            if (Object.keys(unitsMeta.sharedFieldNotes[key]).length === 0)
+                delete unitsMeta.sharedFieldNotes[key];
+            return true;
+        }
+        const nextObj = {
+            text: next,
+            unitName: getCurrentUnitName(),
+            updatedAt: Date.now()
+        };
+        if (prev && prev.text === nextObj.text && prev.unitName === nextObj.unitName)
+            return false;
+        unitsMeta.sharedFieldNotes[key][unitId] = nextObj;
+        return true;
+    }
+    function migrateCurrentUnitFieldNotesToShared() {
+        let changed = false;
+        for (const field of state.fields) {
+            if (!field || !field.name)
+                continue;
+            const localNote = String(field.notes || '').trim();
+            if (!localNote)
+                continue;
+            const key = normalizeFieldKey(field.name);
+            const existing = unitsMeta.sharedFieldNotes && unitsMeta.sharedFieldNotes[key] && unitsMeta.sharedFieldNotes[key][getCurrentUnitId()];
+            if (!existing || !String(existing.text || '').trim()) {
+                changed = upsertSharedFieldNoteForField(field.name, localNote) || changed;
+            }
+        }
+        return changed;
     }
     function stateKeyForUnit(unitId) {
         return LS_STATE_PREFIX + unitId;
@@ -1579,6 +1879,8 @@
             await db.collection(FIRESTORE_UNITS_META_PATH.collection).doc(FIRESTORE_UNITS_META_PATH.doc).set({
                 currentUnitId: unitsMeta.currentUnitId,
                 units: unitsMeta.units,
+                sharedFields: unitsMeta.sharedFields || [],
+                sharedFieldNotes: unitsMeta.sharedFieldNotes || {},
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAtMs: Date.now()
             }, {
@@ -1672,10 +1974,30 @@
             return;
         if (remote) {
             state = remote;
+            let sharedMetaChanged = false;
+            sharedMetaChanged = migrateCurrentUnitFieldsToShared() || sharedMetaChanged;
+            sharedMetaChanged = migrateCurrentUnitFieldNotesToShared() || sharedMetaChanged;
+            if (sharedMetaChanged)
+                saveUnitsMeta();
+            if (syncStateFieldsFromShared()) {
+                saveStateToFirestore(unitId, state).catch(() => {});
+            }
+            if (ensureAllSessionFieldSnapshots()) {
+                saveStateToFirestore(unitId, state).catch(() => {});
+            }
             saveStateToLocal(unitId, state);
             return;
         }
         state = loadStateFromLocal(unitId);
+        let sharedMetaChanged = false;
+        sharedMetaChanged = migrateCurrentUnitFieldsToShared() || sharedMetaChanged;
+        sharedMetaChanged = migrateCurrentUnitFieldNotesToShared() || sharedMetaChanged;
+        if (sharedMetaChanged)
+            saveUnitsMeta();
+        if (syncStateFieldsFromShared())
+            saveStateToLocal(unitId, state);
+        if (ensureAllSessionFieldSnapshots())
+            saveStateToLocal(unitId, state);
     }
 
     // ==================== HELPERS ====================
@@ -1735,6 +2057,48 @@
     }
     function getDoneSessions() {
         return state.sessions.filter(s => s.status === 'done');
+    }
+    function normalizeSessionFieldSnapshot(sess, fieldById) {
+        if (!sess || typeof sess !== 'object')
+            return false;
+        const field = fieldById && sess.fieldId ? fieldById[sess.fieldId] : null;
+        let changed = false;
+        if ((!sess.fieldName || !String(sess.fieldName).trim()) && field && field.name) {
+            sess.fieldName = String(field.name);
+            changed = true;
+        }
+        if ((sess.fieldAcres == null || isNaN(Number(sess.fieldAcres))) && field && !isNaN(Number(field.acres))) {
+            sess.fieldAcres = Number(field.acres);
+            changed = true;
+        }
+        return changed;
+    }
+    function ensureAllSessionFieldSnapshots() {
+        const fieldById = {};
+        for (const f of state.fields) {
+            if (!f || typeof f.id !== 'string')
+                continue;
+            fieldById[f.id] = f;
+        }
+        let changed = false;
+        for (const sess of state.sessions) {
+            changed = normalizeSessionFieldSnapshot(sess, fieldById) || changed;
+        }
+        return changed;
+    }
+    function getSessionFieldMeta(sess) {
+        const field = getField(sess && sess.fieldId);
+        const name = field && field.name ? String(field.name) : (sess && sess.fieldName ? String(sess.fieldName) : 'Unknown Field');
+        let acres = null;
+        if (field && !isNaN(Number(field.acres)))
+            acres = Number(field.acres);
+        else if (sess && !isNaN(Number(sess.fieldAcres)))
+            acres = Number(sess.fieldAcres);
+        return {
+            field,
+            name,
+            acres
+        };
     }
     function isTenderRefill(fill) {
         return !!(fill && fill.kind === 'tender_refill');
@@ -2000,6 +2364,7 @@
         state = getDefaultState();
         state.tankCapacity = cap;
         state.defaultStartTenderGal = isNaN(defaultTenderRaw) ? null : defaultTenderRaw;
+        syncStateFieldsFromShared();
         saveStateToLocal(unitId, state);
         saveStateToFirestore(unitId, state).catch(() => {});
         input.value = '';
@@ -2063,6 +2428,13 @@
         const field = getField(sess.fieldId);
         if (!field)
             return '';
+        const sharedNotes = getSharedFieldNotesForField(field.name);
+        const currentUnitId = getCurrentUnitId();
+        const currentUnitEntry = sharedNotes.find(n => n.unitId === currentUnitId);
+        const currentUnitNote = currentUnitEntry ? currentUnitEntry.text : String(field.notes || '');
+        const sharedNotesRows = sharedNotes.length
+        ? `<div class="field-notes-shared">${sharedNotes.map(n => `<div class="field-note-row"><span class="field-note-unit">${n.unitName}</span><span class="field-note-text">${n.text}</span></div>`).join('')}</div>`
+        : '';
         const applied = sessAppliedForCoverage(sess);
         const added = sessGallonsAdded(sess);
         const tenderStart = sessStartTenderGal(sess);
@@ -2094,10 +2466,10 @@
         ? `<div class="info-row"><span class="info-key">Total time on field</span><span class="info-val">${fmtDuration(sess.endTime - sess.startTime)}</span></div>`
         : `<div class="info-row field-wording-strong"><span class="info-key">Started</span><span class="info-val">${fmtTime(sess.startTime)}</span></div>`;
         const finBtn = sess.status === 'active'
-        ? `<div class="btn-row" style="margin-top:10px"><button class="btn btn-secondary btn-sm" style="font-size:14px" onclick="openPauseModal('${sess.id}')">Pause</button><button class="btn btn-secondary btn-sm" style="font-size:14px" onclick="openFinishModal('${sess.id}')">Finish Field</button></div>`
+        ? `<div class="field-card-actions"><div class="btn-row"><button class="btn btn-secondary btn-sm" onclick="openPauseModal('${sess.id}')">Pause</button><button class="btn btn-primary btn-sm" onclick="openFinishModal('${sess.id}')">Finish Field</button></div></div>`
         : sess.status === 'paused'
-        ? `<div class="btn-row" style="margin-top:10px"><button class="btn btn-secondary btn-sm" style="font-size:14px" onclick="openResumeModal('${sess.id}')">Resume</button><button class="btn btn-secondary btn-sm" style="font-size:14px" onclick="openFinishModal('${sess.id}')">Finish Field</button></div>`
-        : `<div style="margin-top:10px"><button class="btn btn-secondary btn-sm" style="font-size:14px;border-color:var(--accent);color:var(--accent)" onclick="exportSessionPDF('${sess.id}')">📄 Save PDF</button></div>`;
+        ? `<div class="field-card-actions"><div class="btn-row"><button class="btn btn-secondary btn-sm" onclick="openResumeModal('${sess.id}')">Resume</button><button class="btn btn-primary btn-sm" onclick="openFinishModal('${sess.id}')">Finish Field</button></div></div>`
+        : `<div class="field-card-actions"><button class="btn btn-secondary btn-sm" onclick="exportSessionPDF('${sess.id}')">📄 Save PDF</button></div>`;
         const progColor = pct > 85 ? '#7ec850' : pct > 50 ? '#4a9e1a' : '#3a6e14';
         return `<div class="field-card">
     <div class="field-card-header">
@@ -2133,16 +2505,16 @@
            <div class="info-row"><span class="info-key">Tender end</span><span class="info-val">${fmtGal(tenderEnd)}</span></div>`}
       ${elapsed}
       ${avgFill != null ? `<div class="info-row"><span class="info-key">Avg time between fills</span><span class="info-val">${fmtDuration(avgFill)}</span></div>` : ''}
-      ${finBtn}
       <div class="field-notes-wrap">
-        <label class="input-label">Notes</label>
-        <textarea placeholder="Add field notes..." oninput="updateFieldNote('${
-
-        field.id}', this.value)">${field.notes || ''}</textarea>
+        <label class="input-label">Notes (${
+        getCurrentUnitName()})</label>
+        <textarea placeholder="Add field notes..." oninput="updateFieldNote('${field.id}', this.value)">${currentUnitNote || ''}</textarea>
+        ${sharedNotesRows}
       </div>
+      ${
+        finBtn}
     </div>
   </div>`
-
 
         ;
     }
@@ -2163,6 +2535,7 @@
         const rate = parseFloat(document.getElementById('start-rate').value);
         const gal = parseFloat(document.getElementById('start-gallons').value);
         const tenderGal = parseFloat(document.getElementById('start-tender-gallons').value);
+        const field = getField(fieldId);
         if (!fieldId) {
             showToast('Choose a field', true);
             return;
@@ -2191,7 +2564,9 @@
             endGal: null,
             endTenderGal: null,
             endTime: null,
-            status: 'active'
+            status: 'active',
+            fieldName: field && field.name ? String(field.name) : '',
+            fieldAcres: field && !isNaN(Number(field.acres)) ? Number(field.acres) : null
         });
         saveState();
         closeModal('modal-start');
@@ -2591,6 +2966,7 @@
 
     // ==================== LOG ====================
     function renderLog() {
+        ensureAllSessionFieldSnapshots();
         const filter = document.getElementById('log-filter');
         const prev = filter.value;
         filter.innerHTML = '<option value="">All fields</option><option value="__active__">Active fields</option>' +
@@ -2605,15 +2981,15 @@
                 continue;
             if (fid === '__active__' && !activeFieldIds.has(sess.fieldId))
                 continue;
-            const field = getField(sess.fieldId);
-            const fname = field ? field.name : 'Unknown';
+            const meta = getSessionFieldMeta(sess);
+            const fname = meta.name;
             if (sess.status === 'done') {
                 items.push({
                     kind: 'done-summary',
                     ts: sess.endTime || sess.startTime || 0,
                     sess,
-                    field,
-                    fname
+                    fname,
+                    fieldAcres: meta.acres
                 });
                 continue;
             }
@@ -2671,7 +3047,6 @@
         list.innerHTML = items.map(e => {
             if (e.kind === 'done-summary') {
                 const sess = e.sess;
-                const field = e.field;
                 const applied = sessAppliedForCoverage(sess);
                 const loadCount = tractorFillCount(sess);
                 const truckCount = tenderTruckCount(sess);
@@ -2680,16 +3055,16 @@
                 const tenderEnd = sess.endTenderGal != null ? Math.max(0, Number(sess.endTenderGal) || 0) : sessTenderCurrent(sess);
                 const tenderTotal = Math.max(0, tenderStart - tenderEnd);
                 const expanded = !!(state.logDoneExpanded && state.logDoneExpanded[sess.id]);
-                const fieldAcres = field && !isNaN(Number(field.acres)) ? Number(field.acres) : null;
+                const fieldAcres = e.fieldAcres;
                 const coveredAc = sess.status === 'done'
                 ? fieldAcres
                 : (sess.rate > 0 ? (applied / Number(sess.rate)) : null);
-                const galPerAc = field && Number(field.acres) > 0 ? (applied / Number(field.acres)) : null;
+                const galPerAc = fieldAcres != null && Number(fieldAcres) > 0 ? (applied / Number(fieldAcres)) : null;
                 const tractorFills = getTractorFills(sess);
                 const fillRows = tractorFills.length
                 ? tractorFills.map((f, i) => `<div class="info-row"><span class="info-key">Load ${i + 1} · ${fmtTime(f.ts)}</span><span class="info-val">${fmtGal(fillAddedGal(f))}</span></div>`).join('')
                 : '<div class="info-row"><span class="info-key">Loads</span><span class="info-val">0</span></div>';
-                return `<div class="field-card">
+                const doneCard = `<div class="field-card">
         <div class="field-card-header">
           <div>
             <div class="field-card-name">${
@@ -2734,6 +3109,11 @@
 
 
                 ;
+                return `<div class="swipe-log-wrap" data-log-swipe-card data-sess-id="${sess.id}">
+        <button class="swipe-log-action" onclick="deleteDoneLogSession('${sess.id}')">Delete</button>
+        <div class="swipe-log-content">${doneCard}</div>
+      </div>`
+                ;
             }
             const editBtn = e.type === 'fill'
             ? `<button class="btn btn-secondary btn-sm" style="margin-top:5px;font-size:11px;padding:4px 10px" onclick="openEditFill('${e.sessId}','${e.fillId}')">Edit</button>`
@@ -2754,6 +3134,84 @@
     </div>`
             ;
         }).join('');
+        initLogSwipeCards();
+    }
+    let _openLogSwipeCard = null;
+    function closeOpenLogSwipeCard() {
+        if (_openLogSwipeCard)
+            _openLogSwipeCard.classList.remove('open');
+        _openLogSwipeCard = null;
+    }
+    function initLogSwipeCards() {
+        const cards = document.querySelectorAll('[data-log-swipe-card]');
+        cards.forEach(card => {
+            const content = card.querySelector('.swipe-log-content');
+            if (!content)
+                return;
+            let startX = 0;
+            let startY = 0;
+            let dx = 0;
+            let dragging = false;
+            const openThreshold = 46;
+            const closeThreshold = 20;
+            const maxSlide = 88;
+            const pointerDown = (ev) => {
+                dragging = true;
+                startX = ev.clientX;
+                startY = ev.clientY;
+                dx = 0;
+                content.style.transition = 'none';
+                if (_openLogSwipeCard && _openLogSwipeCard !== card)
+                    _openLogSwipeCard.classList.remove('open');
+            };
+            const pointerMove = (ev) => {
+                if (!dragging)
+                    return;
+                const moveX = ev.clientX - startX;
+                const moveY = ev.clientY - startY;
+                if (Math.abs(moveY) > Math.abs(moveX))
+                    return;
+                dx = Math.max(-maxSlide, Math.min(0, moveX));
+                content.style.transform = `translateX(${dx}px)`;
+                ev.preventDefault();
+            };
+            const pointerUp = () => {
+                if (!dragging)
+                    return;
+                dragging = false;
+                content.style.transition = '';
+                const currentlyOpen = card.classList.contains('open');
+                const shouldOpen = currentlyOpen ? dx < -closeThreshold : dx < -openThreshold;
+                if (shouldOpen) {
+                    card.classList.add('open');
+                    _openLogSwipeCard = card;
+                } else {
+                    card.classList.remove('open');
+                    if (_openLogSwipeCard === card)
+                        _openLogSwipeCard = null;
+                }
+                content.style.transform = '';
+            };
+            content.addEventListener('pointerdown', pointerDown);
+            content.addEventListener('pointermove', pointerMove);
+            content.addEventListener('pointerup', pointerUp);
+            content.addEventListener('pointercancel', pointerUp);
+            content.addEventListener('pointerleave', pointerUp);
+        });
+    }
+    function deleteDoneLogSession(sessId) {
+        const sess = getSession(sessId);
+        if (!sess || sess.status !== 'done')
+            return;
+        if (!confirm('Delete this finished field log card?'))
+            return;
+        state.sessions = state.sessions.filter(s => s.id !== sessId);
+        if (state.logDoneExpanded && typeof state.logDoneExpanded === 'object')
+            delete state.logDoneExpanded[sessId];
+        closeOpenLogSwipeCard();
+        saveState();
+        renderLog();
+        showToast('Log card deleted');
     }
     function toggleDoneLogSummary(sessId) {
         if (!state.logDoneExpanded || typeof state.logDoneExpanded !== 'object' || Array.isArray(state.logDoneExpanded)) {
@@ -3076,17 +3534,20 @@
             showToast('Enter valid acres', true);
             return;
         }
-        state.fields.push({
+        if (!Array.isArray(unitsMeta.sharedFields))
+            unitsMeta.sharedFields = [];
+        unitsMeta.sharedFields.push({
             id: uid(),
             name,
-            acres,
-            notes: ''
+            acres
         });
+        saveUnitsMeta();
+        syncStateFieldsFromShared();
         saveState();
         document.getElementById('new-field-name').value = '';
         document.getElementById('new-field-acres').value = '';
         closeModal('modal-add-field');
-        renderSettingsFields();
+        renderAllPages();
         showToast('Field added');
     }
     function editField(fid) {
@@ -3099,26 +3560,72 @@
             showToast('Invalid values', true);
             return;
         }
-        f.name = name.trim();
-        f.acres = acres;
+        const cleanName = name.trim();
+        const shared = getSharedFields();
+        const target = shared.find(field => field.id === fid);
+        if (!target) {
+            showToast('Field not found', true);
+            return;
+        }
+        const oldName = target.name;
+        target.name = cleanName;
+        target.acres = acres;
+        renameSharedFieldNotesKey(oldName, cleanName);
+        saveUnitsMeta();
+        syncStateFieldsFromShared();
         saveState();
-        renderSettingsFields();
+        renderAllPages();
         showToast('Field updated');
     }
     function updateFieldNote(fid, text) {
         const field = getField(fid);
         if (!field)
             return;
-        field.notes = String(text || '');
+        const clean = String(text || '');
+        field.notes = clean;
+        const changed = upsertSharedFieldNoteForField(field.name, clean);
+        if (changed)
+            saveUnitsMeta();
         saveState();
     }
     function deleteField(fid) {
+        ensureAllSessionFieldSnapshots();
         if (!confirm('Delete this field?'))
             return;
-        state.fields = state.fields.filter(f => f.id !== fid);
+        const related = state.sessions.filter(s => s.fieldId === fid);
+        let removedLogs = 0;
+        if (related.length > 0) {
+            const deleteLogs = confirm('Delete all logs for this field too?\n\nOK = delete field + logs\nCancel = delete field only and keep logs with saved field name/data.');
+            if (deleteLogs) {
+                const removeIds = new Set(related.map(s => s.id));
+                removedLogs = removeIds.size;
+                state.sessions = state.sessions.filter(s => !removeIds.has(s.id));
+                if (state.logDoneExpanded && typeof state.logDoneExpanded === 'object') {
+                    Object.keys(state.logDoneExpanded).forEach(id => {
+                        if (removeIds.has(id))
+                            delete state.logDoneExpanded[id];
+                    });
+                }
+            }
+        }
+        const shared = getSharedFields();
+        const removed = shared.find(f => f.id === fid);
+        unitsMeta.sharedFields = shared.filter(f => f.id !== fid);
+        if (removed && unitsMeta.sharedFieldNotes && typeof unitsMeta.sharedFieldNotes === 'object') {
+            const key = normalizeFieldKey(removed.name);
+            const stillUsed = unitsMeta.sharedFields.find(f => normalizeFieldKey(f.name) === key);
+            if (key && unitsMeta.sharedFieldNotes[key] && !stillUsed)
+                delete unitsMeta.sharedFieldNotes[key];
+        }
+        saveUnitsMeta();
+        syncStateFieldsFromShared();
         saveState();
-        renderSettingsFields();
-        showToast('Field deleted');
+        renderHome();
+        renderFillPage();
+        renderLog();
+        renderSettings();
+        renderDataPage();
+        showToast(removedLogs > 0 ? 'Field and related logs deleted' : 'Field deleted (logs kept)');
     }
     function exportData() {
         const payload = {
@@ -3212,6 +3719,7 @@
         localStorage.removeItem(stateKeyForUnit(getCurrentUnitId()));
         localStorage.removeItem(getSelectedSessionKey());
         state = getDefaultState();
+        syncStateFieldsFromShared();
         saveState();
         renderHome();
         renderFillPage();
@@ -3223,19 +3731,19 @@
 
     // ==================== PDF EXPORT ====================
     function buildSessionPDFDoc(doc, sess, startY) {
-        const field = getField(sess.fieldId);
-        const fname = field ? field.name : 'Unknown Field';
+        const meta = getSessionFieldMeta(sess);
+        const fname = meta.name;
         const applied = sessAppliedForCoverage(sess);
         const added = sessGallonsAdded(sess);
         const loadCount = tractorFillCount(sess);
         const truckCount = tenderTruckCount(sess);
         const tenderTruckGal = tenderRefillTotalGallons(sess);
         const rate = sess.rate || 0;
-        const fieldAcres = field && !isNaN(Number(field.acres)) ? Number(field.acres) : null;
+        const fieldAcres = meta.acres;
         const acCov = sess.status === 'done'
         ? (fieldAcres != null ? fieldAcres.toFixed(1) : '—')
         : (rate > 0 ? (applied / rate).toFixed(1) : '—');
-        const galPerAcreApplied = field && Number(field.acres) > 0 ? (applied / Number(field.acres)) : null;
+        const galPerAcreApplied = fieldAcres != null && Number(fieldAcres) > 0 ? (applied / Number(fieldAcres)) : null;
         const tenderStart = sessStartTenderGal(sess);
         const tenderEnd = sess.endTenderGal != null ? Math.max(0, Number(sess.endTenderGal) || 0) : sessTenderCurrent(sess);
         const totalTenderGal = Math.max(0, tenderStart - tenderEnd);
@@ -3266,7 +3774,7 @@
         doc.setFont('helvetica', 'normal');
 
         const summaryData = [
-        ['Field', fname, 'Acres', field ? field.acres + ' ac' : '—'],
+        ['Field', fname, 'Acres', fieldAcres != null ? fmtNum(fieldAcres, 1) + ' ac' : '—'],
         ['Target Rate', rate ? rate + ' gal/ac' : '—', 'Total Acres Covered', acCov + ' ac'],
         ['Tank Start', fmtGal(sess.startGal), 'Tank End', sess.endGal != null ? fmtGal(sess.endGal) : '—'],
         ['Total Applied', fmtGal(applied), 'Total Filled (tank adds)', fmtGal(added)],
@@ -3378,8 +3886,8 @@
         const sess = getSession(sessId);
         if (!sess)
             return;
-        const field = getField(sess.fieldId);
-        const fname = field ? field.name : 'field';
+        const meta = getSessionFieldMeta(sess);
+        const fname = meta.name || 'field';
         const doc = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
