@@ -1622,6 +1622,152 @@ function migrateCurrentUnitFieldNotesToShared() {
   return changed;
 }
 function stateKeyForUnit(unitId) { return LS_STATE_PREFIX + unitId; }
+function stateUpdatedAtKeyForUnit(unitId) { return stateKeyForUnit(unitId) + '_updated_at_ms'; }
+const PT_LOCAL_UPDATED_MS_KEY = 'pt_local_updated_at_ms';
+const PF_LOCAL_UPDATED_MS_KEY = 'pf_local_updated_at_ms';
+function getStateLocalUpdatedAtMs(unitId) {
+  try {
+    const ms = Number(localStorage.getItem(stateUpdatedAtKeyForUnit(unitId)));
+    if (!isNaN(ms) && ms > 0) return ms;
+  } catch (e) {}
+  return inferStateLocalUpdatedAtMsFromData(unitId);
+}
+function inferStateLocalUpdatedAtMsFromData(unitId) {
+  try {
+    const raw = localStorage.getItem(stateKeyForUnit(unitId));
+    if (!raw) return 0;
+    const s = JSON.parse(raw);
+    let maxMs = 0;
+    (Array.isArray(s.sessions) ? s.sessions : []).forEach(sess => {
+      if (sess.startTime) maxMs = Math.max(maxMs, Number(sess.startTime));
+      if (sess.endTime) maxMs = Math.max(maxMs, Number(sess.endTime));
+      (Array.isArray(sess.pauses) ? sess.pauses : []).forEach(p => {
+        const t = p && p.at ? new Date(p.at).getTime() : 0;
+        if (!isNaN(t)) maxMs = Math.max(maxMs, t);
+      });
+      (Array.isArray(sess.fills) ? sess.fills : []).forEach(f => {
+        const t = f && f.at ? new Date(f.at).getTime() : 0;
+        if (!isNaN(t)) maxMs = Math.max(maxMs, t);
+      });
+    });
+    return maxMs;
+  } catch (e) { return 0; }
+}
+function ptBumpLocalUpdatedAtMs(ms) {
+  ptLocalUpdatedAtMs = ms || Date.now();
+  try { localStorage.setItem(PT_LOCAL_UPDATED_MS_KEY, String(ptLocalUpdatedAtMs)); } catch (e) {}
+}
+function ptInferLocalUpdatedAtMsFromData() {
+  let maxMs = 0;
+  PT_COLLS.forEach(c => {
+    try {
+      const raw = localStorage.getItem('pt_' + c);
+      if (!raw) return;
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return;
+      arr.forEach(item => {
+        ['createdAt', 'updatedAt', 'startTime', 'overrideDegreesAt'].forEach(k => {
+          if (!item[k]) return;
+          const t = typeof item[k] === 'number' ? item[k] : new Date(item[k]).getTime();
+          if (!isNaN(t)) maxMs = Math.max(maxMs, t);
+        });
+      });
+    } catch (e) {}
+  });
+  return maxMs;
+}
+function ptHydrateLocalUpdatedAtMs() {
+  try {
+    const ms = Number(localStorage.getItem(PT_LOCAL_UPDATED_MS_KEY));
+    if (!isNaN(ms) && ms > 0) {
+      ptLocalUpdatedAtMs = Math.max(ptLocalUpdatedAtMs, ms);
+      return;
+    }
+  } catch (e) {}
+  const inferred = ptInferLocalUpdatedAtMsFromData();
+  if (inferred > 0) ptBumpLocalUpdatedAtMs(inferred);
+}
+function ptApplyRemoteIfNewer(remote) {
+  if (!remote) return false;
+  ptHydrateLocalUpdatedAtMs();
+  const remoteMs = Number(remote.updatedAtMs) || 0;
+  if (remoteMs <= ptLocalUpdatedAtMs) return false;
+  ptData = {
+    farmers: remote.farmers,
+    fields: remote.fields,
+    seasons: remote.seasons,
+    runs: remote.runs,
+    rainEvents: remote.rainEvents,
+    plans: remote.plans
+  };
+  ptSaveAllLocalFromMemory();
+  ptBumpLocalUpdatedAtMs(remoteMs);
+  return true;
+}
+function ptSyncLocalToFirestoreIfNewer(remote) {
+  ptHydrateLocalUpdatedAtMs();
+  if (ptLocalUpdatedAtMs > 0 && (!remote || (Number(remote.updatedAtMs) || 0) < ptLocalUpdatedAtMs)) {
+    savePtToFirestore().catch(() => {});
+  }
+}
+function pfBumpLocalUpdatedAtMs(ms) {
+  pfLocalUpdatedAtMs = ms || Date.now();
+  try { localStorage.setItem(PF_LOCAL_UPDATED_MS_KEY, String(pfLocalUpdatedAtMs)); } catch (e) {}
+}
+function pfInferLocalUpdatedAtMsFromData() {
+  let maxMs = 0;
+  PF_COLLS.forEach(c => {
+    try {
+      const raw = localStorage.getItem('pf_' + c);
+      if (!raw) return;
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return;
+      arr.forEach(item => {
+        ['createdAt', 'updatedAt', 'startTime', 'overrideDegreesAt'].forEach(k => {
+          if (!item[k]) return;
+          const t = typeof item[k] === 'number' ? item[k] : new Date(item[k]).getTime();
+          if (!isNaN(t)) maxMs = Math.max(maxMs, t);
+        });
+      });
+    } catch (e) {}
+  });
+  return maxMs;
+}
+function pfHydrateLocalUpdatedAtMs() {
+  try {
+    const ms = Number(localStorage.getItem(PF_LOCAL_UPDATED_MS_KEY));
+    if (!isNaN(ms) && ms > 0) {
+      pfLocalUpdatedAtMs = Math.max(pfLocalUpdatedAtMs, ms);
+      return;
+    }
+  } catch (e) {}
+  const inferred = pfInferLocalUpdatedAtMsFromData();
+  if (inferred > 0) pfBumpLocalUpdatedAtMs(inferred);
+}
+function pfApplyRemoteIfNewer(remote) {
+  if (!remote) return false;
+  pfHydrateLocalUpdatedAtMs();
+  const remoteMs = Number(remote.updatedAtMs) || 0;
+  if (remoteMs <= pfLocalUpdatedAtMs) return false;
+  pfData = {
+    sessions: remote.sessions,
+    quickchecks: remote.quickchecks,
+    refills: remote.refills
+  };
+  pfSaveAllLocalFromMemory();
+  try { localStorage.setItem('pf_pump_settings', JSON.stringify(remote.pumpSettings || {})); } catch (e) {}
+  if (!isNaN(remote.tankReserve) && remote.tankReserve >= 0) {
+    try { localStorage.setItem('pf_tank_reserve', String(remote.tankReserve)); } catch (e) {}
+  }
+  pfBumpLocalUpdatedAtMs(remoteMs);
+  return true;
+}
+function pfSyncLocalToFirestoreIfNewer(remote) {
+  pfHydrateLocalUpdatedAtMs();
+  if (pfLocalUpdatedAtMs > 0 && (!remote || (Number(remote.updatedAtMs) || 0) < pfLocalUpdatedAtMs)) {
+    savePfToFirestore().catch(() => {});
+  }
+}
 function selectedSessKeyForUnit(unitId) { return LS_SELECTED_SESS_PREFIX + unitId; }
 function getSelectedSessionKey() { return selectedSessKeyForUnit(getCurrentUnitId()); }
 function migrateLegacyLocalStorageData() {
@@ -1750,8 +1896,12 @@ function migrateFieldsToFarm() {
   } catch (e) {}
 }
 
-function saveStateToLocal(unitId, nextState) {
-  try { localStorage.setItem(stateKeyForUnit(unitId), JSON.stringify(nextState)); } catch (e) {}
+function saveStateToLocal(unitId, nextState, updatedAtMs) {
+  const ms = updatedAtMs || Date.now();
+  try {
+    localStorage.setItem(stateKeyForUnit(unitId), JSON.stringify(nextState));
+    localStorage.setItem(stateUpdatedAtKeyForUnit(unitId), String(ms));
+  } catch (e) {}
 }
 function loadStateFromLocal(unitId) {
   try {
@@ -1781,13 +1931,15 @@ async function loadStateFromFirestore(unitId, onUpdate) {
     try {
       unsubUnitState = db.collection(FIRESTORE_UNIT_STATE_COLLECTION).doc(unitId).onSnapshot((snap) => {
         const data = snap.data();
-        const remote = (snap.exists && data && data.state) ? normalizeState(data.state) : null;
+        const remoteUpdatedAtMs = Number(data && data.updatedAtMs) || 0;
+        const remoteState = (snap.exists && data && data.state) ? normalizeState(data.state) : null;
+        const payload = remoteState ? { state: remoteState, updatedAtMs: remoteUpdatedAtMs } : null;
         if (!resolved) {
           resolved = true;
-          resolve(remote);
+          resolve(payload);
           return;
         }
-        if (typeof onUpdate === 'function') onUpdate(remote);
+        if (typeof onUpdate === 'function') onUpdate(payload);
       }, () => {
         if (!resolved) {
           resolved = true;
@@ -1811,10 +1963,9 @@ function saveState() {
 async function loadState() {
   const unitId = getCurrentUnitId();
   const token = ++unitLoadToken;
-  const remote = await loadStateFromFirestore(unitId, (nextRemote) => {
-    if (unitId !== getCurrentUnitId()) return;
-    if (!nextRemote) return;
-    state = nextRemote;
+  const localState = loadStateFromLocal(unitId);
+  const localMs = getStateLocalUpdatedAtMs(unitId);
+  function applyStateMigrationsAndPersist() {
     let sharedMetaChanged = false;
     sharedMetaChanged = migrateCurrentUnitFieldsToShared() || sharedMetaChanged;
     sharedMetaChanged = migrateCurrentUnitFieldNotesToShared() || sharedMetaChanged;
@@ -1826,31 +1977,27 @@ async function loadState() {
       saveStateToFirestore(unitId, state).catch(() => {});
     }
     saveStateToLocal(unitId, state);
+  }
+  const remotePayload = await loadStateFromFirestore(unitId, (nextPayload) => {
+    if (unitId !== getCurrentUnitId()) return;
+    if (!nextPayload || !nextPayload.state) return;
+    const remoteMs = nextPayload.updatedAtMs || 0;
+    if (remoteMs <= getStateLocalUpdatedAtMs(unitId)) return;
+    state = nextPayload.state;
+    applyStateMigrationsAndPersist();
     renderAllPages();
   });
   if (token !== unitLoadToken) return;
-  if (remote) {
-    state = remote;
-    let sharedMetaChanged = false;
-    sharedMetaChanged = migrateCurrentUnitFieldsToShared() || sharedMetaChanged;
-    sharedMetaChanged = migrateCurrentUnitFieldNotesToShared() || sharedMetaChanged;
-    if (sharedMetaChanged) saveUnitsMeta();
-    if (syncStateFieldsFromShared()) {
-      saveStateToFirestore(unitId, state).catch(() => {});
-    }
-    if (ensureAllSessionFieldSnapshots()) {
-      saveStateToFirestore(unitId, state).catch(() => {});
-    }
-    saveStateToLocal(unitId, state);
+  if (remotePayload && remotePayload.state && (remotePayload.updatedAtMs || 0) >= localMs) {
+    state = remotePayload.state;
+    applyStateMigrationsAndPersist();
     return;
   }
-  state = loadStateFromLocal(unitId);
-  let sharedMetaChanged = false;
-  sharedMetaChanged = migrateCurrentUnitFieldsToShared() || sharedMetaChanged;
-  sharedMetaChanged = migrateCurrentUnitFieldNotesToShared() || sharedMetaChanged;
-  if (sharedMetaChanged) saveUnitsMeta();
-  if (syncStateFieldsFromShared()) saveStateToLocal(unitId, state);
-  if (ensureAllSessionFieldSnapshots()) saveStateToLocal(unitId, state);
+  state = localState;
+  applyStateMigrationsAndPersist();
+  if (remotePayload && remotePayload.state && localMs > (remotePayload.updatedAtMs || 0)) {
+    saveStateToFirestore(unitId, state).catch(() => {});
+  }
 }
 
 function detachPtDataListener() {
@@ -1892,7 +2039,7 @@ function ptSaveAllLocalFromMemory() {
 }
 async function savePtToFirestore() {
   if (!firestoreReady) return false;
-  ptLocalUpdatedAtMs = Date.now();
+  ptBumpLocalUpdatedAtMs();
   ptSaveCooldown = true;
   try {
     await db.collection('pt_data').doc('main').set({
@@ -1967,7 +2114,7 @@ function pfSaveAllLocalFromMemory() {
 }
 async function savePfToFirestore() {
   if (!firestoreReady) return false;
-  pfLocalUpdatedAtMs = Date.now();
+  pfBumpLocalUpdatedAtMs();
   pfSaveCooldown = true;
   try {
     await db.collection('pf_data').doc('main').set({
@@ -2253,56 +2400,16 @@ async function loadGpsFromFirestore(onUpdate) {
 }
 function attachAllNewListeners() {
   loadPtFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    ptData = {
-      farmers: nextRemote.farmers,
-      fields: nextRemote.fields,
-      seasons: nextRemote.seasons,
-      runs: nextRemote.runs,
-      rainEvents: nextRemote.rainEvents,
-      plans: nextRemote.plans
-    };
-    ptSaveAllLocalFromMemory();
-    renderAllPages();
+    if (ptApplyRemoteIfNewer(nextRemote)) renderAllPages();
   }).then((firstPt) => {
-    if (!firstPt) return;
-    ptData = {
-      farmers: firstPt.farmers,
-      fields: firstPt.fields,
-      seasons: firstPt.seasons,
-      runs: firstPt.runs,
-      rainEvents: firstPt.rainEvents,
-      plans: firstPt.plans
-    };
-    ptSaveAllLocalFromMemory();
-    renderAllPages();
+    if (ptApplyRemoteIfNewer(firstPt)) renderAllPages();
+    else ptSyncLocalToFirestoreIfNewer(firstPt);
   }).catch(() => {});
   loadPfFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    pfData = {
-      sessions: nextRemote.sessions,
-      quickchecks: nextRemote.quickchecks,
-      refills: nextRemote.refills
-    };
-    pfSaveAllLocalFromMemory();
-    try { localStorage.setItem('pf_pump_settings', JSON.stringify(nextRemote.pumpSettings || {})); } catch (e) {}
-    if (!isNaN(nextRemote.tankReserve) && nextRemote.tankReserve >= 0) {
-      try { localStorage.setItem('pf_tank_reserve', String(nextRemote.tankReserve)); } catch (e) {}
-    }
-    renderAllPages();
+    if (pfApplyRemoteIfNewer(nextRemote)) renderAllPages();
   }).then((firstPf) => {
-    if (!firstPf) return;
-    pfData = {
-      sessions: firstPf.sessions,
-      quickchecks: firstPf.quickchecks,
-      refills: firstPf.refills
-    };
-    pfSaveAllLocalFromMemory();
-    try { localStorage.setItem('pf_pump_settings', JSON.stringify(firstPf.pumpSettings || {})); } catch (e) {}
-    if (!isNaN(firstPf.tankReserve) && firstPf.tankReserve >= 0) {
-      try { localStorage.setItem('pf_tank_reserve', String(firstPf.tankReserve)); } catch (e) {}
-    }
-    renderAllPages();
+    if (pfApplyRemoteIfNewer(firstPf)) renderAllPages();
+    else pfSyncLocalToFirestoreIfNewer(firstPf);
   }).catch(() => {});
   loadNotesFromFirestore((nextRemote) => {
     if (!nextRemote) return;
@@ -2550,9 +2657,11 @@ function ptLoad(col) {
 }
 function ptSave(col, items) {
   try { localStorage.setItem('pt_' + col, JSON.stringify(items)); } catch (e) {}
+  ptBumpLocalUpdatedAtMs();
   savePtToFirestore().catch(() => {});
 }
 function ptRefresh() {
+  ptHydrateLocalUpdatedAtMs();
   PT_COLLS.forEach(c => { ptData[c] = ptLoad(c); });
 }
 function ptAdd(col, item) {
@@ -3462,9 +3571,11 @@ function pfLoad(col) {
 }
 function pfSave(col, items) {
   try { localStorage.setItem('pf_' + col, JSON.stringify(items)); } catch (e) {}
+  pfBumpLocalUpdatedAtMs();
   savePfToFirestore().catch(() => {});
 }
 function pfRefresh() {
+  pfHydrateLocalUpdatedAtMs();
   PF_COLLS.forEach(c => { pfData[c] = pfLoad(c); });
 }
 function pfAdd(col, item) {
@@ -8390,56 +8501,23 @@ async function initApp() {
   gpsRefresh();
   renderAllPages();
   const firstPt = await loadPtFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    ptData = {
-      farmers: nextRemote.farmers,
-      fields: nextRemote.fields,
-      seasons: nextRemote.seasons,
-      runs: nextRemote.runs,
-      rainEvents: nextRemote.rainEvents,
-      plans: nextRemote.plans
-    };
-    ptSaveAllLocalFromMemory();
-    migrateFieldsFromPtToShared();
-    renderAllPages();
+    if (ptApplyRemoteIfNewer(nextRemote)) {
+      migrateFieldsFromPtToShared();
+      renderAllPages();
+    }
   });
-  if (firstPt) {
-    ptData = {
-      farmers: firstPt.farmers,
-      fields: firstPt.fields,
-      seasons: firstPt.seasons,
-      runs: firstPt.runs,
-      rainEvents: firstPt.rainEvents,
-      plans: firstPt.plans
-    };
-    ptSaveAllLocalFromMemory();
+  if (ptApplyRemoteIfNewer(firstPt)) {
     migrateFieldsFromPtToShared();
+  } else {
+    ptSyncLocalToFirestoreIfNewer(firstPt);
   }
   const firstPf = await loadPfFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    pfData = {
-      sessions: nextRemote.sessions,
-      quickchecks: nextRemote.quickchecks,
-      refills: nextRemote.refills
-    };
-    pfSaveAllLocalFromMemory();
-    try { localStorage.setItem('pf_pump_settings', JSON.stringify(nextRemote.pumpSettings || {})); } catch (e) {}
-    if (!isNaN(nextRemote.tankReserve) && nextRemote.tankReserve >= 0) {
-      try { localStorage.setItem('pf_tank_reserve', String(nextRemote.tankReserve)); } catch (e) {}
-    }
-    renderAllPages();
+    if (pfApplyRemoteIfNewer(nextRemote)) renderAllPages();
   });
-  if (firstPf) {
-    pfData = {
-      sessions: firstPf.sessions,
-      quickchecks: firstPf.quickchecks,
-      refills: firstPf.refills
-    };
-    pfSaveAllLocalFromMemory();
-    try { localStorage.setItem('pf_pump_settings', JSON.stringify(firstPf.pumpSettings || {})); } catch (e) {}
-    if (!isNaN(firstPf.tankReserve) && firstPf.tankReserve >= 0) {
-      try { localStorage.setItem('pf_tank_reserve', String(firstPf.tankReserve)); } catch (e) {}
-    }
+  if (pfApplyRemoteIfNewer(firstPf)) {
+    /* remote applied */
+  } else {
+    pfSyncLocalToFirestoreIfNewer(firstPf);
   }
   const firstNotes = await loadNotesFromFirestore((nextRemote) => {
     if (!nextRemote) return;
