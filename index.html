@@ -10,6 +10,8 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23162216'/%3E%3Cpath d='M6 16h20M16 6v20' stroke='%237ec850' stroke-width='3'/%3E%3C/svg%3E">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
     <style>
@@ -46,7 +48,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .menu-panel.open{transform:translateX(0)}
 .menu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .menu-title{font-family:var(--display);font-size:24px;letter-spacing:.08em;color:var(--accent)}
-.menu-close{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--text);cursor:pointer}
+.menu-close{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--accent2);cursor:pointer}
 .menu-section{margin-bottom:12px}
 .content{padding:16px}
 .card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
@@ -192,7 +194,7 @@ input,select,textarea{border-radius:8px}
 <aside class="menu-panel" id="menu-panel">
   <div class="menu-head">
     <div class="menu-title">Menu</div>
-    <button class="menu-close" onclick="closeMainMenu()">✕</button>
+    <button class="menu-close" onclick="closeMainMenu()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div class="menu-section card">
     <div class="card-title">Unit</div>
@@ -201,9 +203,20 @@ input,select,textarea{border-radius:8px}
       <select id="menu-unit-select" onchange="onMenuUnitChange()"></select>
     </div>
   </div>
-  <div class="menu-section card">
-    <button class="btn btn-secondary" style="margin-bottom:8px" onclick="showPage('settings');closeMainMenu()">Settings</button>
-    <button class="btn btn-secondary" onclick="showPage('data');closeMainMenu()">Data</button>
+  <div class="menu-section">
+    <div class="section-title" style="margin-bottom:8px">Tools</div>
+    <button type="button" class="btn btn-secondary" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('tillage');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>Tillage Fert</span></button>
+    <button type="button" class="btn btn-secondary" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('pivot');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg><span>Pivot Tracker</span></button>
+    <button type="button" class="btn btn-secondary" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('pf');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg><span>Pivot Fert</span></button>
+    <button type="button" class="btn btn-secondary" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('sprayer');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg><span>Sprayer Calc</span></button>
+    <button type="button" class="btn btn-secondary" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('maps');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Field Maps</span></button>
+    <button type="button" class="btn btn-secondary" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('fo');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Field Overview</span></button>
+    <button type="button" class="btn btn-secondary" style="display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('notes');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Notes</span></button>
+  </div>
+  <div class="menu-section">
+    <div class="section-title" style="margin-bottom:8px">App</div>
+    <button type="button" class="btn btn-secondary" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('settings');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><span>Settings</span></button>
+    <button type="button" class="btn btn-secondary" style="display:flex;align-items:center;gap:10px;text-align:left" onclick="showPage('data');closeMainMenu()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg><span>Data</span></button>
   </div>
 </aside>
 
@@ -236,19 +249,18 @@ input,select,textarea{border-radius:8px}
       </div>
       <div id="hub-pf-body"></div>
     </div>
-    <div class="card" style="margin-bottom:12px">
+    <div class="card" style="cursor:pointer;margin-bottom:12px" onclick="showPage('sprayer')">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px">
         <div class="card-title" style="margin-bottom:0">SPRAYER CALC</div>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div style="color:var(--text3);opacity:0.5;pointer-events:none">Coming Soon</div>
     </div>
-    <div class="card" style="margin-bottom:12px">
+    <div class="card" style="cursor:pointer;margin-bottom:12px" onclick="showPage('maps')">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px">
         <div class="card-title" style="margin-bottom:0">FIELD MAPS</div>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div style="color:var(--text3);opacity:0.5;pointer-events:none">Coming Soon</div>
+      <div id="hub-maps-body"></div>
     </div>
     <div class="card" style="margin-bottom:12px;cursor:pointer" id="hub-notes-card" onclick="if(event.target.closest('.notes-hub-plus'))return;showPage('notes')">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px">
@@ -331,7 +343,7 @@ input,select,textarea{border-radius:8px}
         <div class="input-group" style="margin-bottom:0">
           <div class="num-row">
             <input type="number" id="fill-after" placeholder="e.g. 800" inputmode="decimal" oninput="calcFillPreview()">
-            <div class="num-btn" onclick="fillFullTank()" title="Full tank">⬆</div>
+            <div class="num-btn" onclick="fillFullTank()" title="Full tank"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>
           </div>
           <div class="chip-row" id="fill-quick-chips"></div>
         </div>
@@ -449,7 +461,7 @@ input,select,textarea{border-radius:8px}
     <div class="card">
       <div class="card-title">Current Unit</div>
       <div class="settings-item-sub" id="data-unit-name" style="margin-bottom:10px">—</div>
-      <button class="btn btn-secondary" style="margin-bottom:8px;border-color:var(--accent);color:var(--accent)" onclick="exportUnitSummaryPDF()">📄 Export Unit Summary PDF</button>
+      <button class="btn btn-secondary" style="margin-bottom:8px;border-color:var(--accent);color:var(--accent)" onclick="exportUnitSummaryPDF()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Export Unit Summary PDF</button>
       <button class="btn btn-secondary" style="margin-bottom:8px" onclick="exportData()">Export Unit JSON Backup</button>
       <button class="btn btn-danger" style="margin-bottom:8px" onclick="confirmClearRecords()">Delete Unit Fill Logs</button>
       <button class="btn btn-danger" style="margin-bottom:8px" onclick="confirmClearAll()">Clear Unit Fields &amp; Data</button>
@@ -517,6 +529,39 @@ input,select,textarea{border-radius:8px}
     </div>
   </div>
   <div class="content" id="fo-content"></div>
+</div>
+
+<!-- SPRAYER CALC -->
+<div class="page" id="page-sprayer">
+  <div class="page-header">
+    <div class="header-title-row">
+      <button type="button" class="back-btn" onclick="goBack()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <h1 class="page-title-flex">Sprayer Calc</h1>
+    </div>
+  </div>
+  <div class="content" id="sprayer-content"></div>
+</div>
+
+<!-- FIELD MAPS -->
+<div class="page" id="page-maps">
+  <div class="page-header">
+    <div class="header-title-row">
+      <button type="button" class="back-btn" onclick="goBack()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <h1 class="page-title-flex">Field Maps</h1>
+      <button type="button" class="menu-trigger" id="maps-refresh-btn" onclick="mapsRefresh()" aria-label="Refresh map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+    </div>
+    <div style="margin-top:8px">
+      <select id="maps-field-filter" onchange="mapsRenderMarkers()" style="width:100%">
+        <option value="">All Fields</option>
+      </select>
+    </div>
+  </div>
+  <div class="content" style="padding:0">
+    <div id="maps-container" style="width:100%;height:calc(100vh - 180px);min-height:400px"></div>
+    <div id="maps-empty" class="empty" style="display:none;padding:20px">
+      No GPS coordinates recorded yet. Add pivot center or custom coordinates from Field Overview → GPS tab.
+    </div>
+  </div>
 </div>
 
 <!-- NAV HUB -->
@@ -613,11 +658,35 @@ input,select,textarea{border-radius:8px}
   </button>
 </nav>
 
+<!-- NAV SPRAYER -->
+<nav class="nav" id="nav-sprayer-bar" style="display:none">
+  <button type="button" class="nav-btn" id="nav-sprayer-home" onclick="showPage('hub')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </button>
+  <button type="button" class="nav-btn active" id="nav-sprayer-calc" onclick="sprayerShowTab('calc')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+    Calc
+  </button>
+  <button type="button" class="nav-btn" id="nav-sprayer-mixes" onclick="sprayerShowTab('mixes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6.5L4.2 17.5A2 2 0 006 20.5h12a2 2 0 001.8-3L15 8.5V2"/><line x1="8.5" y1="2" x2="15.5" y2="2"/><line x1="7.5" y1="13.5" x2="16.5" y2="13.5"/></svg>
+    Mixes
+  </button>
+</nav>
+
+<!-- NAV MAPS -->
+<nav class="nav" id="nav-maps-bar" style="display:none">
+  <button type="button" class="nav-btn active" id="nav-maps-home" onclick="showPage('hub')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </button>
+</nav>
+
 <div class="menu-overlay" id="pt-settings-overlay" onclick="ptCloseSettingsPanel()"></div>
 <aside class="menu-panel" id="pt-settings-panel">
   <div class="menu-head">
     <div class="menu-title">Pivot Setup</div>
-    <button type="button" class="menu-close" onclick="ptCloseSettingsPanel()">✕</button>
+    <button type="button" class="menu-close" onclick="ptCloseSettingsPanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div id="pt-settings-body" style="padding-bottom:24px"></div>
 </aside>
@@ -626,7 +695,7 @@ input,select,textarea{border-radius:8px}
 <aside class="menu-panel" id="pf-settings-panel">
   <div class="menu-head">
     <div class="menu-title">Fert Setup</div>
-    <button type="button" class="menu-close" onclick="pfCloseSettingsPanel()">✕</button>
+    <button type="button" class="menu-close" onclick="pfCloseSettingsPanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div id="pf-settings-body" style="padding-bottom:24px"></div>
 </aside>
@@ -635,7 +704,7 @@ input,select,textarea{border-radius:8px}
 <aside class="menu-panel" id="fo-settings-panel">
   <div class="menu-head">
     <div class="menu-title">Field Settings</div>
-    <button type="button" class="menu-close" onclick="foCloseSettingsPanel()">✕</button>
+    <button type="button" class="menu-close" onclick="foCloseSettingsPanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div id="fo-settings-body" style="padding-bottom:24px"></div>
 </aside>
@@ -711,8 +780,8 @@ input,select,textarea{border-radius:8px}
 <div class="modal-overlay" id="modal-pt-start-run">
   <div class="modal">
     <div class="modal-title">Start Run</div>
-    <div class="input-group"><label class="input-label">Date</label><input type="date" id="pt-start-date"></div>
-    <div class="input-group"><label class="input-label">Time</label><input type="time" id="pt-start-time"></div>
+    <div class="input-group"><label class="input-label">Date</label><input type="text" inputmode="numeric" id="pt-start-date" placeholder="YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"></div>
+    <div class="input-group"><label class="input-label">Time</label><input type="text" inputmode="numeric" id="pt-start-time" placeholder="HH:MM" maxlength="5" pattern="[0-9]{2}:[0-9]{2}"></div>
     <div class="input-group"><label class="input-label">Start Degrees</label><input type="number" id="pt-start-degrees" min="0" max="360" step="0.1" value="0"></div>
     <div class="input-group"><label class="input-label">Direction</label>
       <div style="display:flex;gap:8px">
@@ -828,8 +897,8 @@ input,select,textarea{border-radius:8px}
     </div>
     <div class="input-group"><label class="input-label">Notes</label><textarea id="pf-start-notes" rows="2"></textarea></div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
-      <div class="input-group" style="flex:1;margin-bottom:0"><label class="input-label">Date</label><input type="date" id="pf-start-date"></div>
-      <div class="input-group" style="flex:1;margin-bottom:0"><label class="input-label">Time</label><input type="time" id="pf-start-time"></div>
+      <div class="input-group" style="flex:1;margin-bottom:0"><label class="input-label">Date</label><input type="text" inputmode="numeric" id="pf-start-date" placeholder="YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"></div>
+      <div class="input-group" style="flex:1;margin-bottom:0"><label class="input-label">Time</label><input type="text" inputmode="numeric" id="pf-start-time" placeholder="HH:MM" maxlength="5" pattern="[0-9]{2}:[0-9]{2}"></div>
     </div>
     <div class="btn-row">
       <button type="button" class="btn btn-secondary" onclick="closeModal('modal-pf-start')">Cancel</button>
@@ -865,8 +934,8 @@ input,select,textarea{border-radius:8px}
 <div class="modal-overlay" id="modal-pf-refill">
   <div class="modal">
     <div class="modal-title">Tank Refill</div>
-    <div class="input-group"><label class="input-label">Date</label><input type="date" id="pf-refill-date"></div>
-    <div class="input-group"><label class="input-label">Time</label><input type="time" id="pf-refill-time"></div>
+    <div class="input-group"><label class="input-label">Date</label><input type="text" inputmode="numeric" id="pf-refill-date" placeholder="YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"></div>
+    <div class="input-group"><label class="input-label">Time</label><input type="text" inputmode="numeric" id="pf-refill-time" placeholder="HH:MM" maxlength="5" pattern="[0-9]{2}:[0-9]{2}"></div>
     <div class="input-group"><label class="input-label">Gal Before</label><input type="number" id="pf-refill-before" min="0" step="0.1" oninput="pfUpdateRefillPreview()"></div>
     <div class="input-group"><label class="input-label">Gal After</label><input type="number" id="pf-refill-after" min="0" step="0.1" oninput="pfUpdateRefillPreview()"></div>
     <div class="card" style="margin-bottom:12px;padding:10px 12px">
@@ -1038,7 +1107,7 @@ input,select,textarea{border-radius:8px}
       <button class="btn btn-warn" onclick="finishField()">Finish Field</button>
     </div>
     <div id="finish-pdf-btn-wrap" style="display:none;margin-top:10px">
-      <button class="btn btn-secondary" onclick="exportSessionPDF(_finishId)" style="border-color:var(--accent);color:var(--accent)">📄 Save as PDF</button>
+      <button class="btn btn-secondary" onclick="exportSessionPDF(_finishId)" style="border-color:var(--accent);color:var(--accent)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Save as PDF</button>
     </div>
   </div>
 </div>
@@ -1059,7 +1128,7 @@ input,select,textarea{border-radius:8px}
     <div style="display:flex;gap:10px;margin-top:8px">
       <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-fill')">Cancel</button>
       <button class="btn btn-primary" style="flex:1" onclick="saveEditFill()">Save</button>
-      <button class="btn btn-danger" style="flex:0;padding:14px 16px;font-size:16px" onclick="deleteEditFill()">🗑</button>
+      <button class="btn btn-danger" style="flex:0;padding:14px 16px" onclick="deleteEditFill()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
     </div>
   </div>
 </div>
@@ -1103,7 +1172,7 @@ input,select,textarea{border-radius:8px}
     <div style="display:flex;gap:10px;margin-top:8px">
       <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-edit-tender')">Cancel</button>
       <button class="btn btn-primary" style="flex:1" onclick="saveEditTenderRefill()">Save</button>
-      <button class="btn btn-danger" style="flex:0;padding:14px 16px;font-size:16px" onclick="deleteEditTenderRefill()">🗑</button>
+      <button class="btn btn-danger" style="flex:0;padding:14px 16px" onclick="deleteEditTenderRefill()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
     </div>
   </div>
 </div>
@@ -1131,13 +1200,44 @@ input,select,textarea{border-radius:8px}
   </div>
 </div>
 
+<!-- MODAL: MIXES ADD/EDIT -->
+<div class="modal-overlay" id="modal-mixes-add">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="modal-mixes-title">Add Mix</div>
+    <div class="input-group"><label class="input-label">Mix Name</label><input type="text" id="mix-name" placeholder="e.g. Roundup + AMS"></div>
+    <div class="input-group"><label class="input-label">Unit Type</label>
+      <input type="hidden" id="mix-unit-type" value="Sprayer">
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn btn-secondary" style="flex:1;margin:0" id="mix-unit-sprayer" onclick="mixesSetUnitUi('Sprayer')">Sprayer</button>
+        <button type="button" class="btn btn-secondary" style="flex:1;margin:0;opacity:0.55" id="mix-unit-ranger" onclick="mixesSetUnitUi('Ranger')">Ranger</button>
+        <button type="button" class="btn btn-secondary" style="flex:1;margin:0;opacity:0.55" id="mix-unit-tractor" onclick="mixesSetUnitUi('Tractor')">Tractor</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div class="input-group" style="flex:1;margin-bottom:0"><label class="input-label">Tank Size (gal)</label><input type="number" id="mix-tank-gal" min="0" step="0.1" placeholder="e.g. 300"></div>
+      <div class="input-group" style="flex:1;margin-bottom:0"><label class="input-label">App Rate (gal/ac)</label><input type="number" id="mix-app-rate" min="0" step="0.1" placeholder="e.g. 15"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;padding:10px 12px">
+      <div class="card-title" style="font-size:15px;margin-bottom:8px">Products</div>
+      <div id="mix-products-list"></div>
+      <button type="button" class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="mixesAddProductRow()">+ Add Product</button>
+    </div>
+    <div class="btn-row" style="flex-wrap:wrap">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('modal-mixes-add')">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="mixesConfirmSave()">Save</button>
+      <button type="button" class="btn btn-danger" id="mix-delete-btn" style="display:none" onclick="mixesDeleteCurrent()">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div id="fab-tillage" style="display:none;position:fixed;bottom:calc(80px + var(--safe-bottom) + var(--nav-lift));right:16px;z-index:200">
   <div id="fab-tillage-menu" style="display:none;flex-direction:column;align-items:flex-end;gap:8px;margin-bottom:8px">
-    <button type="button" class="btn btn-secondary btn-sm" id="fab-refill-btn" onclick="showPage('fill');closeFab()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;opacity:.9"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>Refill</button>
-    <button type="button" class="btn btn-secondary btn-sm" id="fab-tender-btn" onclick="showPage('fill');closeFab()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;opacity:.9"><path d="M1 3h5v18H1zM8 8h15v13H8zM8 8V6a2 2 0 012-2h6v4"/><circle cx="17.5" cy="17.5" r="1.5"/><circle cx="11.5" cy="17.5" r="1.5"/></svg>Tender Refill</button>
-    <button type="button" class="btn btn-secondary btn-sm" id="fab-pause-btn" style="display:none" onclick="fabPauseField()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:6px"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>Pause</button>
-    <button type="button" class="btn btn-secondary btn-sm" id="fab-stop-btn" style="display:none" onclick="fabStopField()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:6px"><rect x="7" y="7" width="10" height="10"/></svg>Stop Field</button>
-    <button type="button" class="btn btn-primary btn-sm" id="fab-start-btn" onclick="showStartFieldModal();closeFab()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Start Field</button>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Quick Actions</div>
+    <button type="button" class="btn btn-secondary btn-sm" id="fab-refill-btn" style="width:180px;text-align:left" onclick="showPage('fill');closeFab()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;opacity:.9"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>Refill</button>
+    <button type="button" class="btn btn-secondary btn-sm" id="fab-tender-btn" style="width:180px;text-align:left" onclick="showPage('fill');closeFab()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;opacity:.9"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Tender Refill</button>
+    <button type="button" class="btn btn-secondary btn-sm" id="fab-pause-btn" style="display:none;width:180px;text-align:left" onclick="fabPauseField()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:6px"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>Pause</button>
+    <button type="button" class="btn btn-secondary btn-sm" id="fab-stop-btn" style="display:none;width:180px;text-align:left" onclick="fabStopField()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:6px"><rect x="7" y="7" width="10" height="10"/></svg>Stop Field</button>
+    <button type="button" class="btn btn-primary btn-sm" id="fab-start-btn" style="width:180px;text-align:left" onclick="showStartFieldModal();closeFab()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Start Field</button>
   </div>
   <button type="button" class="btn btn-primary" id="fab-main-btn" onclick="toggleFab()" style="width:56px;height:56px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1146,7 +1246,7 @@ input,select,textarea{border-radius:8px}
 
 <div id="fab-pivot" style="display:none;position:fixed;bottom:calc(80px + var(--safe-bottom) + var(--nav-lift));right:16px;z-index:200">
   <div id="fab-pivot-menu" style="display:none;flex-direction:column;align-items:flex-end;gap:8px;margin-bottom:8px">
-    <button type="button" class="btn btn-primary btn-sm" onclick="ptOpenStartModal();closeFabPivot()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Run</button>
+    <button type="button" class="btn btn-primary btn-sm" style="width:180px;text-align:left" onclick="ptOpenStartModal();closeFabPivot()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Run</button>
   </div>
   <button type="button" class="btn btn-primary" id="fab-pivot-main-btn" onclick="toggleFabPivot()" style="width:56px;height:56px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1155,9 +1255,9 @@ input,select,textarea{border-radius:8px}
 
 <div id="fab-pf" style="display:none;position:fixed;bottom:calc(80px + var(--safe-bottom) + var(--nav-lift));right:16px;z-index:200">
   <div id="fab-pf-menu" style="display:none;flex-direction:column;align-items:flex-end;gap:8px;margin-bottom:8px">
-    <button type="button" class="btn btn-secondary btn-sm" id="fab-pf-qc-btn" style="display:none" onclick="pfFabQuickCheck();closeFabPf()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Quick Check</button>
-    <button type="button" class="btn btn-secondary btn-sm" id="fab-pf-refill-btn" style="display:none" onclick="pfFabRefill();closeFabPf()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>Refill</button>
-    <button type="button" class="btn btn-primary btn-sm" onclick="pfOpenStartModal();closeFabPf()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Start Session</button>
+    <button type="button" class="btn btn-secondary btn-sm" id="fab-pf-qc-btn" style="display:none;width:180px;text-align:left" onclick="pfFabQuickCheck();closeFabPf()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Quick Check</button>
+    <button type="button" class="btn btn-secondary btn-sm" id="fab-pf-refill-btn" style="display:none;width:180px;text-align:left" onclick="pfFabRefill();closeFabPf()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>Refill</button>
+    <button type="button" class="btn btn-primary btn-sm" style="width:180px;text-align:left" onclick="pfOpenStartModal();closeFabPf()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Start Session</button>
   </div>
   <button type="button" class="btn btn-primary" id="fab-pf-main-btn" onclick="toggleFabPf()" style="width:56px;height:56px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1625,6 +1725,28 @@ function stateKeyForUnit(unitId) { return LS_STATE_PREFIX + unitId; }
 function stateUpdatedAtKeyForUnit(unitId) { return stateKeyForUnit(unitId) + '_updated_at_ms'; }
 const PT_LOCAL_UPDATED_MS_KEY = 'pt_local_updated_at_ms';
 const PF_LOCAL_UPDATED_MS_KEY = 'pf_local_updated_at_ms';
+const NOTES_LOCAL_UPDATED_MS_KEY = 'notes_local_updated_at_ms';
+const TODOS_LOCAL_UPDATED_MS_KEY = 'todos_local_updated_at_ms';
+const MIXES_LOCAL_UPDATED_MS_KEY = 'mixes_local_updated_at_ms';
+const GPS_LOCAL_UPDATED_MS_KEY = 'gps_local_updated_at_ms';
+function inferArrayLocalUpdatedAtMs(lsKey) {
+  try {
+    const raw = localStorage.getItem(lsKey);
+    if (!raw) return 0;
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return 0;
+    let maxMs = 0;
+    arr.forEach(item => {
+      ['createdAt', 'updatedAt'].forEach(k => {
+        if (item && item[k]) {
+          const t = new Date(item[k]).getTime();
+          if (!isNaN(t)) maxMs = Math.max(maxMs, t);
+        }
+      });
+    });
+    return maxMs;
+  } catch (e) { return 0; }
+}
 function getStateLocalUpdatedAtMs(unitId) {
   try {
     const ms = Number(localStorage.getItem(stateUpdatedAtKeyForUnit(unitId)));
@@ -1766,6 +1888,130 @@ function pfSyncLocalToFirestoreIfNewer(remote) {
   pfHydrateLocalUpdatedAtMs();
   if (pfLocalUpdatedAtMs > 0 && (!remote || (Number(remote.updatedAtMs) || 0) < pfLocalUpdatedAtMs)) {
     savePfToFirestore().catch(() => {});
+  }
+}
+function notesBumpLocalUpdatedAtMs(ms) {
+  notesLocalUpdatedAtMs = ms || Date.now();
+  try { localStorage.setItem(NOTES_LOCAL_UPDATED_MS_KEY, String(notesLocalUpdatedAtMs)); } catch (e) {}
+}
+function notesHydrateLocalUpdatedAtMs() {
+  try {
+    const ms = Number(localStorage.getItem(NOTES_LOCAL_UPDATED_MS_KEY));
+    if (!isNaN(ms) && ms > 0) {
+      notesLocalUpdatedAtMs = Math.max(notesLocalUpdatedAtMs, ms);
+      return;
+    }
+  } catch (e) {}
+  const inferred = inferArrayLocalUpdatedAtMs(NOTES_LS_KEY);
+  if (inferred > 0) notesBumpLocalUpdatedAtMs(inferred);
+}
+function notesApplyRemoteIfNewer(remote) {
+  if (!remote || !Array.isArray(remote.data)) return false;
+  notesHydrateLocalUpdatedAtMs();
+  const remoteMs = Number(remote.updatedAtMs) || 0;
+  if (remoteMs <= notesLocalUpdatedAtMs) return false;
+  notesData = remote.data;
+  try { localStorage.setItem(NOTES_LS_KEY, JSON.stringify(notesData)); } catch (e) {}
+  notesBumpLocalUpdatedAtMs(remoteMs);
+  return true;
+}
+function notesSyncLocalToFirestoreIfNewer(remote) {
+  notesHydrateLocalUpdatedAtMs();
+  if (notesLocalUpdatedAtMs > 0 && (!remote || (Number(remote.updatedAtMs) || 0) < notesLocalUpdatedAtMs)) {
+    saveNotesToFirestore().catch(() => {});
+  }
+}
+function todosBumpLocalUpdatedAtMs(ms) {
+  todosLocalUpdatedAtMs = ms || Date.now();
+  try { localStorage.setItem(TODOS_LOCAL_UPDATED_MS_KEY, String(todosLocalUpdatedAtMs)); } catch (e) {}
+}
+function todosHydrateLocalUpdatedAtMs() {
+  try {
+    const ms = Number(localStorage.getItem(TODOS_LOCAL_UPDATED_MS_KEY));
+    if (!isNaN(ms) && ms > 0) {
+      todosLocalUpdatedAtMs = Math.max(todosLocalUpdatedAtMs, ms);
+      return;
+    }
+  } catch (e) {}
+  const inferred = inferArrayLocalUpdatedAtMs(TODOS_LS_KEY);
+  if (inferred > 0) todosBumpLocalUpdatedAtMs(inferred);
+}
+function todosApplyRemoteIfNewer(remote) {
+  if (!remote || !Array.isArray(remote.data)) return false;
+  todosHydrateLocalUpdatedAtMs();
+  const remoteMs = Number(remote.updatedAtMs) || 0;
+  if (remoteMs <= todosLocalUpdatedAtMs) return false;
+  todosData = remote.data;
+  try { localStorage.setItem(TODOS_LS_KEY, JSON.stringify(todosData)); } catch (e) {}
+  todosBumpLocalUpdatedAtMs(remoteMs);
+  return true;
+}
+function todosSyncLocalToFirestoreIfNewer(remote) {
+  todosHydrateLocalUpdatedAtMs();
+  if (todosLocalUpdatedAtMs > 0 && (!remote || (Number(remote.updatedAtMs) || 0) < todosLocalUpdatedAtMs)) {
+    saveTodosToFirestore().catch(() => {});
+  }
+}
+function mixesBumpLocalUpdatedAtMs(ms) {
+  mixesLocalUpdatedAtMs = ms || Date.now();
+  try { localStorage.setItem(MIXES_LOCAL_UPDATED_MS_KEY, String(mixesLocalUpdatedAtMs)); } catch (e) {}
+}
+function mixesHydrateLocalUpdatedAtMs() {
+  try {
+    const ms = Number(localStorage.getItem(MIXES_LOCAL_UPDATED_MS_KEY));
+    if (!isNaN(ms) && ms > 0) {
+      mixesLocalUpdatedAtMs = Math.max(mixesLocalUpdatedAtMs, ms);
+      return;
+    }
+  } catch (e) {}
+  const inferred = inferArrayLocalUpdatedAtMs(MIXES_LS_KEY);
+  if (inferred > 0) mixesBumpLocalUpdatedAtMs(inferred);
+}
+function mixesApplyRemoteIfNewer(remote) {
+  if (!remote || !Array.isArray(remote.data)) return false;
+  mixesHydrateLocalUpdatedAtMs();
+  const remoteMs = Number(remote.updatedAtMs) || 0;
+  if (remoteMs <= mixesLocalUpdatedAtMs) return false;
+  mixesData = remote.data;
+  try { localStorage.setItem(MIXES_LS_KEY, JSON.stringify(mixesData)); } catch (e) {}
+  mixesBumpLocalUpdatedAtMs(remoteMs);
+  return true;
+}
+function mixesSyncLocalToFirestoreIfNewer(remote) {
+  mixesHydrateLocalUpdatedAtMs();
+  if (mixesLocalUpdatedAtMs > 0 && (!remote || (Number(remote.updatedAtMs) || 0) < mixesLocalUpdatedAtMs)) {
+    saveMixesToFirestore().catch(() => {});
+  }
+}
+function gpsBumpLocalUpdatedAtMs(ms) {
+  gpsLocalUpdatedAtMs = ms || Date.now();
+  try { localStorage.setItem(GPS_LOCAL_UPDATED_MS_KEY, String(gpsLocalUpdatedAtMs)); } catch (e) {}
+}
+function gpsHydrateLocalUpdatedAtMs() {
+  try {
+    const ms = Number(localStorage.getItem(GPS_LOCAL_UPDATED_MS_KEY));
+    if (!isNaN(ms) && ms > 0) {
+      gpsLocalUpdatedAtMs = Math.max(gpsLocalUpdatedAtMs, ms);
+      return;
+    }
+  } catch (e) {}
+  const inferred = inferArrayLocalUpdatedAtMs(GPS_LS_KEY);
+  if (inferred > 0) gpsBumpLocalUpdatedAtMs(inferred);
+}
+function gpsApplyRemoteIfNewer(remote) {
+  if (!remote || !Array.isArray(remote.data)) return false;
+  gpsHydrateLocalUpdatedAtMs();
+  const remoteMs = Number(remote.updatedAtMs) || 0;
+  if (remoteMs <= gpsLocalUpdatedAtMs) return false;
+  gpsData = remote.data;
+  try { localStorage.setItem(GPS_LS_KEY, JSON.stringify(gpsData)); } catch (e) {}
+  gpsBumpLocalUpdatedAtMs(remoteMs);
+  return true;
+}
+function gpsSyncLocalToFirestoreIfNewer(remote) {
+  gpsHydrateLocalUpdatedAtMs();
+  if (gpsLocalUpdatedAtMs > 0 && (!remote || (Number(remote.updatedAtMs) || 0) < gpsLocalUpdatedAtMs)) {
+    saveGpsToFirestore().catch(() => {});
   }
 }
 function selectedSessKeyForUnit(unitId) { return LS_SELECTED_SESS_PREFIX + unitId; }
@@ -2180,7 +2426,7 @@ async function loadPfFromFirestore(onUpdate) {
 }
 async function saveNotesToFirestore() {
   if (!firestoreReady) return false;
-  notesLocalUpdatedAtMs = Date.now();
+  notesBumpLocalUpdatedAtMs();
   notesSaveCooldown = true;
   try {
     await db.collection('app_notes').doc('main').set({
@@ -2211,7 +2457,10 @@ async function loadNotesFromFirestore(onUpdate) {
           }
           return;
         }
-        const remote = (snap.exists && data) ? (Array.isArray(data.notes) ? data.notes : []) : null;
+        const remote = (snap.exists && data) ? {
+          data: Array.isArray(data.notes) ? data.notes : [],
+          updatedAtMs: remoteUpdatedAtMs
+        } : null;
         if (!resolved) {
           resolved = true;
           resolve(remote);
@@ -2235,7 +2484,7 @@ async function loadNotesFromFirestore(onUpdate) {
 }
 async function saveTodosToFirestore() {
   if (!firestoreReady) return false;
-  todosLocalUpdatedAtMs = Date.now();
+  todosBumpLocalUpdatedAtMs();
   todosSaveCooldown = true;
   try {
     await db.collection('app_todos').doc('main').set({
@@ -2266,7 +2515,10 @@ async function loadTodosFromFirestore(onUpdate) {
           }
           return;
         }
-        const remote = (snap.exists && data) ? (Array.isArray(data.todos) ? data.todos : []) : null;
+        const remote = (snap.exists && data) ? {
+          data: Array.isArray(data.todos) ? data.todos : [],
+          updatedAtMs: remoteUpdatedAtMs
+        } : null;
         if (!resolved) {
           resolved = true;
           resolve(remote);
@@ -2290,7 +2542,7 @@ async function loadTodosFromFirestore(onUpdate) {
 }
 async function saveMixesToFirestore() {
   if (!firestoreReady) return false;
-  mixesLocalUpdatedAtMs = Date.now();
+  mixesBumpLocalUpdatedAtMs();
   mixesSaveCooldown = true;
   try {
     await db.collection('app_mixes').doc('main').set({
@@ -2321,7 +2573,10 @@ async function loadMixesFromFirestore(onUpdate) {
           }
           return;
         }
-        const remote = (snap.exists && data) ? (Array.isArray(data.mixes) ? data.mixes : []) : null;
+        const remote = (snap.exists && data) ? {
+          data: Array.isArray(data.mixes) ? data.mixes : [],
+          updatedAtMs: remoteUpdatedAtMs
+        } : null;
         if (!resolved) {
           resolved = true;
           resolve(remote);
@@ -2345,7 +2600,7 @@ async function loadMixesFromFirestore(onUpdate) {
 }
 async function saveGpsToFirestore() {
   if (!firestoreReady) return false;
-  gpsLocalUpdatedAtMs = Date.now();
+  gpsBumpLocalUpdatedAtMs();
   gpsSaveCooldown = true;
   try {
     await db.collection('app_gps').doc('main').set({
@@ -2376,7 +2631,10 @@ async function loadGpsFromFirestore(onUpdate) {
           }
           return;
         }
-        const remote = (snap.exists && data) ? (Array.isArray(data.records) ? data.records : []) : null;
+        const remote = (snap.exists && data) ? {
+          data: Array.isArray(data.records) ? data.records : [],
+          updatedAtMs: remoteUpdatedAtMs
+        } : null;
         if (!resolved) {
           resolved = true;
           resolve(remote);
@@ -2412,48 +2670,28 @@ function attachAllNewListeners() {
     else pfSyncLocalToFirestoreIfNewer(firstPf);
   }).catch(() => {});
   loadNotesFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    notesData = nextRemote;
-    try { localStorage.setItem(NOTES_LS_KEY, JSON.stringify(notesData)); } catch (e) {}
-    renderAllPages();
+    if (notesApplyRemoteIfNewer(nextRemote)) renderAllPages();
   }).then((firstNotes) => {
-    if (!firstNotes) return;
-    notesData = firstNotes;
-    try { localStorage.setItem(NOTES_LS_KEY, JSON.stringify(notesData)); } catch (e) {}
-    renderAllPages();
+    if (notesApplyRemoteIfNewer(firstNotes)) renderAllPages();
+    else notesSyncLocalToFirestoreIfNewer(firstNotes);
   }).catch(() => {});
   loadTodosFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    todosData = nextRemote;
-    try { localStorage.setItem(TODOS_LS_KEY, JSON.stringify(todosData)); } catch (e) {}
-    renderAllPages();
+    if (todosApplyRemoteIfNewer(nextRemote)) renderAllPages();
   }).then((firstTodos) => {
-    if (!firstTodos) return;
-    todosData = firstTodos;
-    try { localStorage.setItem(TODOS_LS_KEY, JSON.stringify(todosData)); } catch (e) {}
-    renderAllPages();
+    if (todosApplyRemoteIfNewer(firstTodos)) renderAllPages();
+    else todosSyncLocalToFirestoreIfNewer(firstTodos);
   }).catch(() => {});
   loadMixesFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    mixesData = nextRemote;
-    try { localStorage.setItem(MIXES_LS_KEY, JSON.stringify(mixesData)); } catch (e) {}
-    renderAllPages();
+    if (mixesApplyRemoteIfNewer(nextRemote)) renderAllPages();
   }).then((firstMixes) => {
-    if (!firstMixes) return;
-    mixesData = firstMixes;
-    try { localStorage.setItem(MIXES_LS_KEY, JSON.stringify(mixesData)); } catch (e) {}
-    renderAllPages();
+    if (mixesApplyRemoteIfNewer(firstMixes)) renderAllPages();
+    else mixesSyncLocalToFirestoreIfNewer(firstMixes);
   }).catch(() => {});
   loadGpsFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    gpsData = nextRemote;
-    try { localStorage.setItem(GPS_LS_KEY, JSON.stringify(gpsData)); } catch (e) {}
-    renderAllPages();
+    if (gpsApplyRemoteIfNewer(nextRemote)) renderAllPages();
   }).then((firstGps) => {
-    if (!firstGps) return;
-    gpsData = firstGps;
-    try { localStorage.setItem(GPS_LS_KEY, JSON.stringify(gpsData)); } catch (e) {}
-    renderAllPages();
+    if (gpsApplyRemoteIfNewer(firstGps)) renderAllPages();
+    else gpsSyncLocalToFirestoreIfNewer(firstGps);
   }).catch(() => {});
 }
 
@@ -2471,6 +2709,12 @@ function fmtDuration(ms) {
   const m = Math.round(ms/60000);
   if (m < 60) return m + 'm';
   return Math.floor(m/60) + 'h ' + (m%60) + 'm';
+}
+function parseDateInputOrToday(s) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '').trim()) ? String(s).trim() : new Date().toISOString().slice(0, 10);
+}
+function parseTimeInputOrNow(s) {
+  return /^\d{2}:\d{2}$/.test(String(s || '').trim()) ? String(s).trim() : new Date().toTimeString().slice(0, 5);
 }
 function getField(id) { return state.fields.find(f=>f.id===id); }
 function getSession(id) { return state.sessions.find(s=>s.id===id); }
@@ -2992,7 +3236,7 @@ function ptRenderRunsTab() {
               <div id="pt-deg-edit-${run.id}" style="display:none;align-items:center;gap:6px">
                 <input type="number" id="pt-deg-input-${run.id}" value="${estDeg != null ? estDeg : ''}" min="0" max="360" step="0.1" style="width:80px;padding:4px 8px;font-family:var(--mono);font-size:13px;background:var(--surface3);border:1px solid var(--accent);border-radius:6px;color:var(--text)">
                 <button type="button" class="btn btn-primary btn-sm" onclick="ptSaveDegOverride('${run.id}')">Save</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="ptCancelDegEdit('${run.id}')">✕</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="ptCancelDegEdit('${run.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
               </div>
             </div>
           </div></div>
@@ -3041,7 +3285,8 @@ function ptRenderLogTab() {
         <div class="info-row"><span class="info-key">Direction / Speed</span><span class="info-val">${run.direction} · ${run.speedPercent}%</span></div>
         <div class="info-row"><span class="info-key">Duration</span><span class="info-val">${ptFmtElapsed(ptRunElapsedMs(run))}</span></div>
         <div class="info-row"><span class="info-key">Notes</span><span class="info-val" style="text-align:right;max-width:55%">${run.notes ? String(run.notes).replace(/</g, '&lt;') : '—'}</span></div>
-        <button type="button" class="btn btn-danger btn-sm" style="margin-top:10px" onclick="ptDeleteCompletedRun('${run.id}')">Delete</button>
+        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;border-color:var(--accent);color:var(--accent)" onclick="exportPtRunPDF('${run.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+        <button type="button" class="btn btn-danger btn-sm" style="margin-top:10px;margin-left:8px" onclick="ptDeleteCompletedRun('${run.id}')">Delete</button>
       </div></details>`;
   });
   if (!completed.filter(r => !filt || r.fieldId === filt).length) html += '<div class="empty">No completed runs.</div>';
@@ -3101,7 +3346,7 @@ function ptStopRun(runId, form) {
   if (linkedPfSession) {
     const sf = getSharedFields().find(f => f.id === linkedPfSession.fieldId);
     const fieldName = sf ? sf.name : 'this field';
-    if (confirm(`Pivot Fert session for ${fieldName} is still active. Stop it now?`)) {
+    if (confirm(`Stop the linked Pivot Fert session for ${fieldName} as well?`)) {
       pfOpenEndModal(linkedPfSession.id);
     }
   }
@@ -3216,8 +3461,8 @@ function ptUpdateStartHoursPreview() {
 function ptConfirmStartRun() {
   const field = ptGetField(_ptStartFieldId);
   if (!field) return;
-  const dateStr = document.getElementById('pt-start-date').value;
-  const timeStr = document.getElementById('pt-start-time').value;
+  const dateStr = parseDateInputOrToday(document.getElementById('pt-start-date').value);
+  const timeStr = parseTimeInputOrNow(document.getElementById('pt-start-time').value);
   const sp = parseFloat(document.getElementById('pt-start-speed').value);
   const sd = parseFloat(document.getElementById('pt-start-degrees').value);
   if (!dateStr || !timeStr) { showToast('Set date and time', true); return; }
@@ -3297,7 +3542,7 @@ function ptRenderSettingsBody() {
   h += '</div><div class="menu-section card"><div class="card-title">Fields</div>';
   h += '<p class="settings-item-sub" style="margin-bottom:10px">Field settings are managed in App Settings.</p>';
   h += '<button type="button" class="btn btn-secondary" onclick="showPage(\'settings\')">Open Settings</button>';
-  h += '</div><p class="settings-item-sub" style="margin-top:12px">Seasons are created automatically from run start dates</p>';
+  h += '</div>';
   root.innerHTML = h;
 }
 
@@ -3322,7 +3567,7 @@ function ptRenameFarmPrompt(farmId) {
 function ptDeleteFarmConfirm(farmId) {
   const f = ptData.farmers.find(x => x.id === farmId);
   if (!f) return;
-  if (!confirm(`Delete "${f.name}" and ALL fields, runs, seasons, and related data for this farm?`)) return;
+  if (!confirm(`Delete farm '${f.name}' and all its fields and runs? This cannot be undone.`)) return;
   ptDeleteFarmCascade(farmId);
   ptRenderSettingsBody();
   renderHubPage();
@@ -3332,7 +3577,7 @@ function ptDeleteFarmConfirm(farmId) {
 function ptDeleteFieldConfirm(fieldId) {
   const f = ptData.fields.find(x => x.id === fieldId);
   if (!f) return;
-  if (!confirm(`Delete field "${f.name}" and all its runs?`)) return;
+  if (!confirm(`Delete field '${f.name}' and all its runs? This cannot be undone.`)) return;
   ptDeleteFieldCascade(fieldId);
   ptRenderSettingsBody();
   renderHubPage();
@@ -3361,7 +3606,7 @@ function ptRenderStopRows(stops, listId) {
   const arr = Array.isArray(stops) ? stops : [];
   const el = document.getElementById(listId || 'pt-field-stops-list');
   if (!el) return;
-  el.innerHTML = arr.map((s, i) => `<div style="display:flex;gap:8px;margin-bottom:8px"><input type="text" placeholder="Name" value="${String(s.name || '').replace(/"/g, '&quot;')}" data-stop-i="${i}" data-stop-k="name" class="pt-stop-inp" style="flex:1"><input type="number" placeholder="°" value="${s.degrees != null ? s.degrees : ''}" data-stop-i="${i}" data-stop-k="deg" class="pt-stop-inp" style="width:88px"><button type="button" class="btn btn-danger btn-sm" onclick="ptRemoveStopRow(${i},'${listId || 'pt-field-stops-list'}')">✕</button></div>`).join('');
+  el.innerHTML = arr.map((s, i) => `<div style="display:flex;gap:8px;margin-bottom:8px"><input type="text" placeholder="Name" value="${String(s.name || '').replace(/"/g, '&quot;')}" data-stop-i="${i}" data-stop-k="name" class="pt-stop-inp" style="flex:1"><input type="number" placeholder="°" value="${s.degrees != null ? s.degrees : ''}" data-stop-i="${i}" data-stop-k="deg" class="pt-stop-inp" style="width:88px"><button type="button" class="btn btn-danger btn-sm" onclick="ptRemoveStopRow(${i},'${listId || 'pt-field-stops-list'}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
 }
 
 function ptRemoveStopRow(i, listId) {
@@ -3411,7 +3656,7 @@ function ptRenderAccRows(acc) {
   const arr = Array.isArray(acc) ? acc : [];
   const el = document.getElementById('pt-field-acc-list');
   if (!el) return;
-  el.innerHTML = arr.map((a, i) => `<div style="display:flex;gap:8px;margin-bottom:8px"><input type="text" value="${String(a.name || '').replace(/"/g, '&quot;')}" data-acc-i="${i}" class="pt-acc-inp" style="flex:1"><button type="button" class="btn btn-danger btn-sm" onclick="ptRemoveAccRow(${i})">✕</button></div>`).join('');
+  el.innerHTML = arr.map((a, i) => `<div style="display:flex;gap:8px;margin-bottom:8px"><input type="text" value="${String(a.name || '').replace(/"/g, '&quot;')}" data-acc-i="${i}" class="pt-acc-inp" style="flex:1"><button type="button" class="btn btn-danger btn-sm" onclick="ptRemoveAccRow(${i})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
 }
 
 function ptRemoveAccRow(i) {
@@ -4040,7 +4285,7 @@ function renderPfSessions() {
         <div id="pf-deg-edit-${session.id}" style="display:none;align-items:center;gap:6px">
           <input type="number" id="pf-deg-input-${session.id}" value="${estDeg != null ? estDeg : ''}" min="0" max="360" step="0.1" style="width:80px;padding:4px 8px;font-family:var(--mono);font-size:13px;background:var(--surface3);border:1px solid var(--accent);border-radius:6px;color:var(--text)">
           <button type="button" class="btn btn-primary btn-sm" onclick="pfSaveDegOverride('${session.id}')">Save</button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="pfCancelDegEdit('${session.id}')">✕</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="pfCancelDegEdit('${session.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
     </div></div>`;
@@ -4073,7 +4318,7 @@ function renderPfSessions() {
         <div class="info-row"><span class="info-key">Gal injected</span><span class="info-val">${fmtNum(session.totalGalInjected, 1)} gal</span></div>
         <div class="info-row"><span class="info-key">Units applied</span><span class="info-val">${fmtNum(session.totalLbsNApplied, 1)} units</span></div>
         <div class="info-row"><span class="info-key">Application rate</span><span class="info-val">${fmtNum(session.unitsPerAcreApplied != null ? session.unitsPerAcreApplied : (session.totalLbsNApplied / (parseFloat(sf.acres) || 1)), 2)} units/acre</span></div>
-        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;border-color:var(--accent);color:var(--accent)" onclick="showToast('PDF coming in Stage 6')">📄 PDF</button>
+        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;border-color:var(--accent);color:var(--accent)" onclick="exportPfSessionPDF('${session.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
         <button type="button" class="btn btn-danger btn-sm" style="margin-top:10px;margin-left:8px" onclick="pfDeleteSession('${session.id}')" aria-label="Delete session"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 3h6"/></svg>Delete</button>
       </div></details>`;
   });
@@ -4814,8 +5059,8 @@ function pfConfirmStartSession() {
   const passesRaw = document.getElementById('pf-start-passes') && document.getElementById('pf-start-passes').value;
   const passTarget = passesRaw != null && String(passesRaw).trim() !== '' ? parseInt(passesRaw, 10) : 0;
 
-  const dateVal = document.getElementById('pf-start-date').value;
-  const timeVal = document.getElementById('pf-start-time').value;
+  const dateVal = parseDateInputOrToday(document.getElementById('pf-start-date').value);
+  const timeVal = parseTimeInputOrNow(document.getElementById('pf-start-time').value);
   let startTimestamp = new Date().toISOString();
   if (dateVal && timeVal) {
     const parsed = new Date(dateVal + 'T' + timeVal);
@@ -5097,8 +5342,8 @@ function pfConfirmRefill() {
   const galBefore = parseFloat(document.getElementById('pf-refill-before').value);
   const galAfter = parseFloat(document.getElementById('pf-refill-after').value);
   if (isNaN(galBefore) || isNaN(galAfter)) { showToast('Enter gal before and after', true); return; }
-  const d = document.getElementById('pf-refill-date').value;
-  const t = document.getElementById('pf-refill-time').value;
+  const d = parseDateInputOrToday(document.getElementById('pf-refill-date').value);
+  const t = parseTimeInputOrNow(document.getElementById('pf-refill-time').value);
   let timestamp = new Date().toISOString();
   if (d && t) {
     const isoTry = new Date(d + 'T' + t + ':00');
@@ -5252,6 +5497,7 @@ function renderAllPages() {
   renderDataPage();
   renderNotesPage();
   renderFoPage();
+  if (document.getElementById('sprayer-content')) renderSprayerPage();
 }
 
 function renderHubPage() {
@@ -5330,6 +5576,18 @@ function renderHubPage() {
         return `<div style="margin-bottom:10px;font-size:13px;line-height:1.4"><strong>${String(fname).replace(/</g, '&lt;')}</strong><br><span style="color:var(--text3);font-family:var(--mono)">${estStr}  |  pump ${fmtNum(pumpUse, 1)}%  |  ${String(session.product || '').replace(/</g, '&lt;')}</span><br>${ovBtn}</div>`;
       }).join('');
     }
+  }
+  const hmb = document.getElementById('hub-maps-body');
+  if (hmb) {
+    gpsRefresh();
+    const fieldIds = new Set();
+    (gpsData || []).forEach(g => {
+      const hasCoords = (g.pivotCenter && (g.pivotCenter.lat != null || g.pivotCenter.lon != null)) || (Array.isArray(g.custom) && g.custom.some(c => c.lat != null || c.lon != null));
+      if (hasCoords && g.fieldId) fieldIds.add(String(g.fieldId));
+    });
+    hmb.innerHTML = fieldIds.size
+      ? `<div style="font-family:var(--mono);font-size:13px;color:var(--text2)">${fieldIds.size} field${fieldIds.size === 1 ? '' : 's'} with coordinates</div>`
+      : '<div style="font-family:var(--mono);font-size:13px;color:var(--text2)">No coordinates recorded yet.</div>';
   }
   renderHubNotesBody();
 }
@@ -5522,8 +5780,12 @@ function showPage(name, pushHistory = true) {
   closeFabPf();
   const navNotesBarEl = document.getElementById('nav-notes-bar');
   const navFoBarEl = document.getElementById('nav-fo-bar');
+  const navSprayerBarEl = document.getElementById('nav-sprayer-bar');
+  const navMapsBarEl = document.getElementById('nav-maps-bar');
   if (navNotesBarEl) navNotesBarEl.style.display = name === 'notes' ? 'flex' : 'none';
   if (navFoBarEl) navFoBarEl.style.display = name === 'fo' ? 'flex' : 'none';
+  if (navSprayerBarEl) navSprayerBarEl.style.display = name === 'sprayer' ? 'flex' : 'none';
+  if (navMapsBarEl) navMapsBarEl.style.display = name === 'maps' ? 'flex' : 'none';
   if (name !== 'pivot') {
     ptClearLiveInterval();
     const pnav = document.getElementById('nav-pivot-bar');
@@ -5621,10 +5883,36 @@ function showPage(name, pushHistory = true) {
     if (fnv) fnv.style.display = 'flex';
     foCurrentTab = 'overview';
     foInit();
+    if (foReturnField) {
+      foCurrentField = foReturnField;
+      foCurrentSeason = foReturnSeason;
+      foReturnField = null;
+      foReturnSeason = null;
+      foPopulateFieldSelect();
+      foPopulateSeasonSelect();
+    }
+    renderFoPage();
     document.querySelectorAll('#nav-fo-bar .nav-btn').forEach(b => b.classList.remove('active'));
     const ov = document.getElementById('nav-fo-overview');
     if (ov) ov.classList.add('active');
     hideFab();
+  } else if (name === 'sprayer') {
+    setNavBarsVisibility(false, false);
+    const spn = document.getElementById('nav-sprayer-bar');
+    if (spn) spn.style.display = 'flex';
+    document.querySelectorAll('#nav-sprayer-bar .nav-btn').forEach(b => { if (b.id !== 'nav-sprayer-home') b.classList.remove('active'); });
+    const nspc = document.getElementById('nav-sprayer-calc');
+    if (nspc) nspc.classList.add('active');
+    sprayerCurrentTab = 'calc';
+    renderSprayerPage();
+    hideFab();
+  } else if (name === 'maps') {
+    setNavBarsVisibility(false, false);
+    const mpn = document.getElementById('nav-maps-bar');
+    if (mpn) mpn.style.display = 'flex';
+    hideFab();
+    mapsInit();
+    setTimeout(() => { if (mapsLeafletInstance) mapsLeafletInstance.invalidateSize(); }, 100);
   }
 
   if (pushHistory) pageHistory.push(name);
@@ -5664,10 +5952,12 @@ function notesLoad() {
 
 function notesSave(items) {
   try { localStorage.setItem(NOTES_LS_KEY, JSON.stringify(items)); } catch (e) {}
+  notesBumpLocalUpdatedAtMs();
   saveNotesToFirestore().catch(() => {});
 }
 
 function notesRefresh() {
+  notesHydrateLocalUpdatedAtMs();
   notesData = notesLoad();
 }
 
@@ -5721,10 +6011,12 @@ function todosLoad() {
 
 function todosSave(items) {
   try { localStorage.setItem(TODOS_LS_KEY, JSON.stringify(items)); } catch (e) {}
+  todosBumpLocalUpdatedAtMs();
   saveTodosToFirestore().catch(() => {});
 }
 
 function todosRefresh() {
+  todosHydrateLocalUpdatedAtMs();
   todosData = todosLoad();
 }
 
@@ -5776,10 +6068,12 @@ function mixesLoad() {
 
 function mixesSave(items) {
   try { localStorage.setItem(MIXES_LS_KEY, JSON.stringify(items)); } catch (e) {}
+  mixesBumpLocalUpdatedAtMs();
   saveMixesToFirestore().catch(() => {});
 }
 
 function mixesRefresh() {
+  mixesHydrateLocalUpdatedAtMs();
   mixesData = mixesLoad();
 }
 
@@ -5832,10 +6126,12 @@ function gpsLoad() {
 
 function gpsSave(items) {
   try { localStorage.setItem(GPS_LS_KEY, JSON.stringify(items)); } catch (e) {}
+  gpsBumpLocalUpdatedAtMs();
   saveGpsToFirestore().catch(() => {});
 }
 
 function gpsRefresh() {
+  gpsHydrateLocalUpdatedAtMs();
   gpsData = gpsLoad();
 }
 
@@ -5987,7 +6283,6 @@ function notesListForField(fieldId, orphanNameNorm) {
 }
 
 function notesBuildStripHtml(fieldId, displayName, toolSource, sessionRef, orphanNameNorm) {
-  console.log('[notes strip] fieldId:', fieldId, 'toolSource:', toolSource, 'sessionRef:', sessionRef, 'orphanNameNorm:', orphanNameNorm);
   notesRefresh();
   const list = notesListForField(fieldId, orphanNameNorm).slice(0, 8);
   let addOnclick;
@@ -6178,7 +6473,7 @@ function gpsAddOpRow(data) {
   row.innerHTML = `<input type="text" class="gps-op-label" placeholder="Label" value="${notesEscapeAttr(d.label)}" style="flex:1;min-width:80px;margin-bottom:0"/>
     <input type="number" class="gps-op-deg" placeholder="°" min="0" max="360" step="0.1" maxlength="3" value="${d.degrees != null ? d.degrees : ''}" style="width:72px;margin-bottom:0"/>
     <input type="text" class="gps-op-season" placeholder="Season" value="${notesEscapeAttr(d.season)}" style="width:72px;margin-bottom:0"/>
-    <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove()">×</button>`;
+    <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
   list.appendChild(row);
 }
 
@@ -6191,7 +6486,7 @@ function gpsAddCustomRow(data) {
   row.innerHTML = `<input type="text" class="gps-cust-label" placeholder="Label" value="${notesEscapeAttr(d.label)}" style="flex:1;min-width:60px;margin-bottom:0"/>
     <input type="text" class="gps-cust-lat" placeholder="Lat" value="${notesEscapeAttr(d.lat)}" style="width:90px;margin-bottom:0"/>
     <input type="text" class="gps-cust-lon" placeholder="Lon" value="${notesEscapeAttr(d.lon)}" style="width:90px;margin-bottom:0"/>
-    <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove()">×</button>`;
+    <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
   list.appendChild(row);
 }
 
@@ -6245,7 +6540,7 @@ function mixesRenderProductRows(products) {
     <input type="text" class="mix-pr-name" placeholder="Product" value="${notesEscapeAttr(p.name)}" style="flex:1;min-width:80px;margin-bottom:0"/>
     <input type="number" class="mix-pr-qty" placeholder="Qty" value="${p.quantity != null ? p.quantity : ''}" style="width:72px;margin-bottom:0"/>
     <select class="mix-pr-unit" style="margin-bottom:0;width:72px"><option value="oz"${(p.unit || 'oz') === 'oz' ? ' selected' : ''}>oz</option><option value="lbs"${p.unit === 'lbs' ? ' selected' : ''}>lbs</option><option value="gal"${p.unit === 'gal' ? ' selected' : ''}>gal</option></select>
-    <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove();if(!document.querySelectorAll('#mix-products-list .mix-prod-row').length)mixesRenderProductRows([{}])">×</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove();if(!document.querySelectorAll('#mix-products-list .mix-prod-row').length)mixesRenderProductRows([{}])"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>`).join('');
 }
 
@@ -6327,6 +6622,7 @@ function mixesConfirmSave() {
   if (mo) closeModal('modal-mixes-add');
   renderNotesPage();
   notesRefreshToolStrips();
+  mixesRefreshSprayerIfActive();
 }
 
 function mixesDeleteCurrent() {
@@ -6337,6 +6633,14 @@ function mixesDeleteCurrent() {
   if (mo) closeModal('modal-mixes-add');
   renderNotesPage();
   notesRefreshToolStrips();
+  mixesRefreshSprayerIfActive();
+}
+
+function mixesRefreshSprayerIfActive() {
+  const sprayerPage = document.getElementById('page-sprayer');
+  if (sprayerPage && sprayerPage.classList.contains('active') && typeof renderSprayerPage === 'function') {
+    renderSprayerPage();
+  }
 }
 
 function gpsOpenAddModal(fieldId) {
@@ -6400,10 +6704,8 @@ function gpsConfirmSave() {
     operations: geo.operations,
     custom: geo.custom
   };
-  console.log('[GPS save] record:', patch);
   if (_gpsEditId) gpsUpdate(_gpsEditId, patch);
   else gpsAdd(patch);
-  console.log('[GPS save] gpsData after:', gpsData);
   const go = document.getElementById('modal-gps-add');
   if (go) closeModal('modal-gps-add');
   renderFoPage();
@@ -6649,7 +6951,8 @@ function renderGpsTab() {
       ${cust ? `<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Custom: ${notesEscapeAttr(cust)}</div>` : ''}
       <div style="display:flex;gap:6px">
         <button type="button" class="btn btn-secondary btn-sm" onclick="gpsOpenEditModal('${String(rec.id).replace(/'/g, "\\'")}')">Edit</button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="if(confirm('Delete this GPS record?')){gpsRemove('${String(rec.id).replace(/'/g, "\\'")}');renderNotesPage();notesRefreshToolStrips();}">Delete</button>
+        ${pc && (pc.lat != null || pc.lon != null) ? `<button type="button" class="btn btn-secondary btn-sm" onclick="mapsGoToRecord('${String(rec.id).replace(/'/g, "\\'")}')">View on Map</button>` : ''}
+        <button type="button" class="btn btn-danger btn-sm" onclick="if(confirm('Delete this GPS record?')){gpsRemove('${String(rec.id).replace(/'/g, "\\'")}');renderNotesPage();notesRefreshToolStrips();}">Delete</button>
       </div>
     </div>`;
   });
@@ -6697,6 +7000,8 @@ function renderHubNotesBody() {
 let foCurrentField = null;
 let foCurrentSeason = null;
 let foCurrentTab = 'overview';
+let foReturnField = null;
+let foReturnSeason = null;
 
 function foCurrentYearStr() {
   return String(new Date().getFullYear());
@@ -6746,7 +7051,7 @@ function foPopulateFieldSelect() {
     byFarm[k].push(f);
   });
   const farms = Object.keys(byFarm).sort((a, b) => a.localeCompare(b));
-  let html = '<option value="">Select a field...</option>';
+  let html = '<option value="" disabled>Select a field...</option>';
   farms.forEach(farm => {
     html += `<optgroup label="${notesEscapeAttr(farm)}">`;
     byFarm[farm].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))).forEach(f => {
@@ -6804,7 +7109,11 @@ function foPopulateSeasonSelect() {
       years.add(String(n.season || currentYear));
     });
   }
-  if (!years.size) years.add(currentYear);
+  if (!years.size) {
+    foCurrentSeason = currentYear;
+    sel.innerHTML = '<option value="" disabled selected>No data yet</option>';
+    return;
+  }
   const arr = Array.from(years).filter(Boolean).sort((a, b) => Number(b) - Number(a));
   if (!foCurrentSeason || !arr.includes(String(foCurrentSeason))) foCurrentSeason = arr[0];
   sel.innerHTML = arr.map(y => `<option value="${notesEscapeAttr(y)}">${notesEscapeAttr(y)}</option>`).join('');
@@ -6878,7 +7187,6 @@ function foRenderOverview() {
   let pfUnits = 0;
   let pfGal = 0;
   pfDone.forEach(s => {
-    console.log('[FO PF]', s.id, 'totalLbsNApplied:', s.totalLbsNApplied, 'totalGalInjected:', s.totalGalInjected, 'unitsPerAcreApplied:', s.unitsPerAcreApplied);
     pfUnits += pfFoPivotNUnits(s);
     pfGal += Number(s.totalGalInjected) || 0;
   });
@@ -6886,7 +7194,16 @@ function foRenderOverview() {
   const notesList = (notesData || []).filter(n => String(n.fieldId) === String(field.id)).sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
   const todoList = (todosData || []).filter(t => String(t.fieldId) === String(field.id)).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   const todoSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-  let html = `<div class="card"><div class="card-title">Field Info</div>
+  const fieldIdEsc = String(field.id).replace(/'/g, "\\'");
+  const hasTillageSessions = (state.sessions || []).some(s => String(s.fieldId) === String(foCurrentField));
+  const isPivotField = field.irrigationType === 'Pivot';
+  let html = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    ${hasTillageSessions ? `<button type="button" class="btn btn-secondary btn-sm" onclick="showPage('tillage')">Tillage Fert</button>` : ''}
+    ${isPivotField ? `<button type="button" class="btn btn-secondary btn-sm" onclick="showPage('pivot')">Pivot Tracker</button>` : ''}
+    ${isPivotField ? `<button type="button" class="btn btn-secondary btn-sm" onclick="showPage('pf')">Pivot Fert</button>` : ''}
+    <button type="button" class="btn btn-secondary btn-sm" onclick="notesGoToFiltered({fieldId:'${fieldIdEsc}'})">Notes</button>
+  </div>`;
+  html += `<div class="card"><div class="card-title">Field Info</div>
     <div class="info-row"><span class="info-key">Field</span><span class="info-val">${notesEscapeAttr(field.name || '')}</span></div>
     <div class="info-row"><span class="info-key">Acres</span><span class="info-val">${fmtNum(field.acres, 1)} ac</span></div>
     <div class="info-row"><span class="info-key">Farm</span><span class="info-val">${notesEscapeAttr(field.farmName || '—')}</span></div>
@@ -6914,11 +7231,10 @@ function foRenderOverview() {
       }
       const inches = r.waterAppliedInches != null ? Number(r.waterAppliedInches).toFixed(3) : '—';
       return `<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:12px;color:var(--text3)">${notesEscapeAttr(dt)}</div><div style="font-size:13px">${notesEscapeAttr(arcLine)} | ${fmtNum(r.speedPercent,1)}% speed | ${inches}"</div></div>`;
-    }).join('') : '<div class="empty" style="padding:12px 6px">No pivot tracker runs for this season.</div>'}
+    }).join('') : (isPivotField ? '<div class="empty" style="padding:12px 6px">No pivot tracker runs for this season.</div>' : '<div class="empty" style="padding:12px 6px">Water tracking available for Pivot irrigation fields.</div>')}
+    ${seasonRuns.length ? `<button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;border-color:var(--accent);color:var(--accent)" onclick="foExportPtSeasonPDF()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Season PDF</button>` : ''}
   </div>`;
-  const fertEmpty = tillDone.length === 0 && pfDone.length === 0;
   html += `<div class="card"><div class="card-title">Fertilizer Applied</div>
-    ${fertEmpty ? '<div style="font-size:12px;color:var(--text3);padding:8px 0">No applications recorded this season.</div>' : `
     <div class="section-title">Tillage Fert</div>
     <div class="info-row"><span class="info-key">Total gal applied</span><span class="info-val">${fmtNum(tillGal, 1)} gal</span></div>
     <div class="info-row"><span class="info-key">Total acres covered</span><span class="info-val">${fmtNum(tillAc, 1)} ac</span></div>
@@ -6938,11 +7254,14 @@ function foRenderOverview() {
       const gInj = Number(s.totalGalInjected);
       return `<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:12px;color:var(--text3)">${notesEscapeAttr(dt)} | ${notesEscapeAttr(s.product || '')}</div><div style="font-size:13px">${fmtNum(nu, 1)} units (${fmtNum(gInj, 1)} gal)</div></div>`;
     }).join('') : '<div style="font-size:12px;color:var(--text3);padding:6px 0">No pivot fert sessions this season.</div>'}
-    `}
-    <div class="info-row" style="margin-top:10px"><span class="info-key">Combined N Applied</span><span class="info-val">${hasPfNRecorded ? `— (tillage) + ${fmtNum(pfUnits, 1)} units (pivot fert) = ${fmtNum(pfUnits, 1)} units total` : 'No N data recorded this season'}</span></div>
+    ${pfDone.length ? `<button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;border-color:var(--accent);color:var(--accent)" onclick="foExportPfFieldSeasonPDF()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Season PDF</button>` : ''}
+    ${hasPfNRecorded ? `<div class="info-row" style="margin-top:10px"><span class="info-key">Combined N Applied</span><span class="info-val">— (tillage) + ${fmtNum(pfUnits, 1)} units (pivot fert) = ${fmtNum(pfUnits, 1)} units total</span></div>` : ''}
   </div>`;
   html += `<div class="card"><div class="card-title">Notes</div>
-    ${notesList.length ? notesList.slice(0, 8).map(n => `<div style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="notesGoToFiltered({fieldId:'${String(field.id).replace(/'/g, "\\'")}'});">${notesEscapeAttr((n.text || '').slice(0, 140) || '(empty)')}</div>`).join('') : '<div class="empty" style="padding:12px 6px">No notes for this field.</div>'}
+    ${notesList.length ? notesList.slice(0, 8).map(n => `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="notesGoToFiltered({fieldId:'${fieldIdEsc}'});">${notesEscapeAttr((n.text || '').slice(0, 140) || '(empty)')}</div>
+      <button type="button" class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="event.stopPropagation();notesOpenEditModal('${String(n.id).replace(/'/g, "\\'")}')">Edit</button>
+    </div>`).join('') : '<div class="empty" style="padding:12px 6px">No notes for this field.</div>'}
     <button type="button" class="btn btn-secondary" style="margin-top:10px" onclick="notesOpenAddModal('${String(field.id).replace(/'/g, "\\'")}','fieldoverview')">Add Note</button>
   </div>`;
   html += `<div class="card"><div class="card-title">To-Do</div>
@@ -6972,12 +7291,162 @@ function foRenderGps() {
       ${cus ? `<div class="section-title" style="margin-top:8px">Custom Coordinates</div>${cus}` : ''}
       <div class="btn-row" style="margin-top:10px">
         <button type="button" class="btn btn-secondary btn-sm" onclick="gpsOpenEditModal('${String(rec.id).replace(/'/g, "\\'")}')">Edit</button>
+        ${pc && (pc.lat != null || pc.lon != null) ? `<button type="button" class="btn btn-secondary btn-sm" onclick="mapsGoToRecord('${String(rec.id).replace(/'/g, "\\'")}')">View on Map</button>` : ''}
         <button type="button" class="btn btn-danger btn-sm" onclick="if(confirm('Delete this GPS record?')){gpsRemove('${String(rec.id).replace(/'/g, "\\'")}');renderFoPage();}">Delete</button>
       </div>
     </div>`;
   }).join('');
   return html;
 }
+
+// ==================== FIELD MAPS (Stage 9) ====================
+let mapsLeafletInstance = null;
+let mapsMarkersLayer = null;
+
+function mapsInit() {
+  mapsPopulateFieldFilter();
+  if (mapsLeafletInstance) { mapsRenderMarkers(); return; }
+  if (typeof L === 'undefined' || !document.getElementById('maps-container')) return;
+  mapsLeafletInstance = L.map('maps-container').setView([39.8283, -98.5795], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(mapsLeafletInstance);
+  mapsMarkersLayer = L.layerGroup().addTo(mapsLeafletInstance);
+  mapsRenderMarkers();
+}
+
+function mapsPopulateFieldFilter() {
+  const sel = document.getElementById('maps-field-filter');
+  if (!sel) return;
+  gpsRefresh();
+  const prevVal = sel.value;
+  const fieldIds = new Set();
+  (gpsData || []).forEach(g => {
+    const hasCoords = (g.pivotCenter && (g.pivotCenter.lat != null || g.pivotCenter.lon != null)) || (Array.isArray(g.custom) && g.custom.some(c => c.lat != null || c.lon != null));
+    if (hasCoords && g.fieldId) fieldIds.add(String(g.fieldId));
+  });
+  const fields = getSharedFields().filter(f => fieldIds.has(String(f.id)));
+  const byFarm = {};
+  fields.forEach(f => {
+    const k = foNormFarmName(f.farmName);
+    if (!byFarm[k]) byFarm[k] = [];
+    byFarm[k].push(f);
+  });
+  const farms = Object.keys(byFarm).sort((a, b) => a.localeCompare(b));
+  let html = '<option value="">All Fields</option>';
+  farms.forEach(farm => {
+    html += `<optgroup label="${notesEscapeAttr(farm)}">`;
+    byFarm[farm].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))).forEach(f => {
+      html += `<option value="${notesEscapeAttr(f.id)}">${notesEscapeAttr(f.name)}</option>`;
+    });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+  sel.value = (prevVal && fields.some(f => String(f.id) === String(prevVal))) ? prevVal : '';
+}
+
+function mapsCustomIcon() {
+  return L.divIcon({
+    className: '',
+    html: '<div style="width:16px;height:16px;border-radius:50%;background:#e8622c;border:2px solid #fff;box-shadow:0 0 2px rgba(0,0,0,.7)"></div>',
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+    popupAnchor: [0, -8]
+  });
+}
+
+function mapsRenderMarkers() {
+  if (!mapsLeafletInstance || !mapsMarkersLayer) return;
+  gpsRefresh();
+  mapsMarkersLayer.clearLayers();
+  const filterVal = (document.getElementById('maps-field-filter') || {}).value || '';
+  const records = (gpsData || []).filter(g => !filterVal || String(g.fieldId) === String(filterVal));
+  const allPoints = [];
+
+  const pivotGroups = new Map();
+  records.forEach(rec => {
+    const pc = rec.pivotCenter;
+    if (!pc || pc.lat == null || pc.lon == null || isNaN(pc.lat) || isNaN(pc.lon)) return;
+    const rLat = Math.round(Number(pc.lat) * 1e5) / 1e5;
+    const rLon = Math.round(Number(pc.lon) * 1e5) / 1e5;
+    const key = String(rec.fieldId) + '|' + rLat + ',' + rLon;
+    if (!pivotGroups.has(key)) pivotGroups.set(key, { fieldId: rec.fieldId, fieldName: rec.fieldName, lat: rLat, lon: rLon, seasons: new Set(), recordIds: [] });
+    const grp = pivotGroups.get(key);
+    if (rec.season) grp.seasons.add(String(rec.season));
+    grp.recordIds.push(rec.id);
+  });
+  pivotGroups.forEach(grp => {
+    const field = getSharedFields().find(f => String(f.id) === String(grp.fieldId));
+    const fieldName = field ? field.name : (grp.fieldName || 'Unknown Field');
+    const seasonsList = Array.from(grp.seasons).sort();
+    const popupText = `${notesEscapeAttr(fieldName)} — Pivot Center${seasonsList.length ? ' (' + seasonsList.map(s => notesEscapeAttr(s)).join(', ') + ')' : ''}`;
+    const marker = L.marker([grp.lat, grp.lon]).bindPopup(popupText);
+    marker.__gpsRecordIds = grp.recordIds;
+    marker.__gpsKind = 'pivot';
+    marker.addTo(mapsMarkersLayer);
+    allPoints.push([grp.lat, grp.lon]);
+  });
+
+  const customSeen = new Set();
+  records.forEach(rec => {
+    (rec.custom || []).forEach(c => {
+      if (c.lat == null || c.lon == null || isNaN(c.lat) || isNaN(c.lon)) return;
+      const rLat = Math.round(Number(c.lat) * 1e5) / 1e5;
+      const rLon = Math.round(Number(c.lon) * 1e5) / 1e5;
+      const key = String(rec.fieldId) + '|' + (c.label || '') + '|' + rLat + ',' + rLon;
+      if (customSeen.has(key)) return;
+      customSeen.add(key);
+      const field = getSharedFields().find(f => String(f.id) === String(rec.fieldId));
+      const fieldName = field ? field.name : (rec.fieldName || 'Unknown Field');
+      const popupText = `${notesEscapeAttr(fieldName)} — ${notesEscapeAttr(c.label || 'Custom Point')}`;
+      const marker = L.marker([rLat, rLon], { icon: mapsCustomIcon() }).bindPopup(popupText);
+      marker.__gpsRecordIds = [rec.id];
+      marker.__gpsKind = 'custom';
+      marker.addTo(mapsMarkersLayer);
+      allPoints.push([rLat, rLon]);
+    });
+  });
+
+  const emptyEl = document.getElementById('maps-empty');
+  if (allPoints.length) {
+    if (emptyEl) emptyEl.style.display = 'none';
+    mapsLeafletInstance.fitBounds(L.latLngBounds(allPoints), { padding: [30, 30], maxZoom: 15 });
+  } else {
+    if (emptyEl) emptyEl.style.display = '';
+    mapsLeafletInstance.setView([39.8283, -98.5795], 4);
+  }
+}
+
+function mapsRefresh() {
+  gpsRefresh();
+  mapsPopulateFieldFilter();
+  mapsRenderMarkers();
+  showToast('Map refreshed');
+}
+
+function mapsGoToRecord(recordId) {
+  showPage('maps');
+  setTimeout(() => {
+    gpsRefresh();
+    const rec = (gpsData || []).find(g => g.id === recordId);
+    if (!rec) return;
+    const sel = document.getElementById('maps-field-filter');
+    if (sel) sel.value = rec.fieldId != null ? String(rec.fieldId) : '';
+    mapsRenderMarkers();
+    if (!mapsMarkersLayer || !mapsLeafletInstance) return;
+    let target = null;
+    mapsMarkersLayer.eachLayer(m => {
+      if (!target && Array.isArray(m.__gpsRecordIds) && m.__gpsRecordIds.indexOf(recordId) !== -1) target = m;
+    });
+    if (target) {
+      const ll = target.getLatLng();
+      mapsLeafletInstance.setView([ll.lat, ll.lng], 16);
+      target.openPopup();
+    }
+  }, 200);
+}
+
 function foSaveCrop() {
   const field = foGetSharedField();
   const inp = document.getElementById('fo-crop-input');
@@ -7002,6 +7471,8 @@ function foSaveVariety() {
 }
 function foOpenSettingsPanel() {
   foCloseSettingsPanel();
+  foReturnField = foCurrentField;
+  foReturnSeason = foCurrentSeason;
   showPage('settings');
 }
 function foCloseSettingsPanel() {
@@ -7045,8 +7516,8 @@ function foRenderSettingsBody() {
       <div class="input-group"><label class="input-label">Arc Type</label><div style="display:flex;gap:8px"><button type="button" class="btn btn-secondary btn-sm" style="flex:1;opacity:${(pe.arcType || 'full') === 'full' ? '1' : '0.55'}" onclick="document.getElementById('fo-pe-arc').value='full';foRenderSettingsBody()">Full</button><button type="button" class="btn btn-secondary btn-sm" style="flex:1;opacity:${(pe.arcType || 'full') === 'partial' ? '1' : '0.55'}" onclick="document.getElementById('fo-pe-arc').value='partial';foRenderSettingsBody()">Partial</button></div><input type="hidden" id="fo-pe-arc" value="${notesEscapeAttr(pe.arcType || 'full')}"></div>
       ${(pe.arcType || 'full') === 'partial' ? `<div class="input-group"><label class="input-label">Barrier Start °</label><input type="number" id="fo-pe-bstart" min="0" max="360" value="${pe.barrierStart != null ? notesEscapeAttr(String(pe.barrierStart)) : ''}"></div><div class="input-group"><label class="input-label">Barrier End °</label><input type="number" id="fo-pe-bend" min="0" max="360" value="${pe.barrierEnd != null ? notesEscapeAttr(String(pe.barrierEnd)) : ''}"></div>` : ''}
       <div class="input-group"><label class="input-label">Stop Positions</label>
-        <div id="fo-pe-stops">${stops.map((s, i) => `<div style="display:flex;gap:8px;margin-bottom:8px"><input type="text" class="fo-stop-name" data-i="${i}" placeholder="Name" value="${notesEscapeAttr(s && s.name)}" style="flex:1"><input type="number" class="fo-stop-deg" data-i="${i}" placeholder="°" value="${s && s.degrees != null ? notesEscapeAttr(String(s.degrees)) : ''}" style="width:88px"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button></div>`).join('')}</div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fo-pe-stops').insertAdjacentHTML('beforeend','<div style=&quot;display:flex;gap:8px;margin-bottom:8px&quot;><input type=&quot;text&quot; class=&quot;fo-stop-name&quot; placeholder=&quot;Name&quot; style=&quot;flex:1&quot;><input type=&quot;number&quot; class=&quot;fo-stop-deg&quot; placeholder=&quot;°&quot; style=&quot;width:88px&quot;><button type=&quot;button&quot; class=&quot;btn btn-danger btn-sm&quot; onclick=&quot;this.parentElement.remove()&quot;>✕</button></div>')">+ Add Stop</button>
+        <div id="fo-pe-stops">${stops.map((s, i) => `<div style="display:flex;gap:8px;margin-bottom:8px"><input type="text" class="fo-stop-name" data-i="${i}" placeholder="Name" value="${notesEscapeAttr(s && s.name)}" style="flex:1"><input type="number" class="fo-stop-deg" data-i="${i}" placeholder="°" value="${s && s.degrees != null ? notesEscapeAttr(String(s.degrees)) : ''}" style="width:88px"><button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')}</div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fo-pe-stops').insertAdjacentHTML('beforeend','<div style=&quot;display:flex;gap:8px;margin-bottom:8px&quot;><input type=&quot;text&quot; class=&quot;fo-stop-name&quot; placeholder=&quot;Name&quot; style=&quot;flex:1&quot;><input type=&quot;number&quot; class=&quot;fo-stop-deg&quot; placeholder=&quot;°&quot; style=&quot;width:88px&quot;><button type=&quot;button&quot; class=&quot;btn btn-danger btn-sm&quot; onclick=&quot;this.parentElement.remove()&quot;><svg width=&quot;14&quot; height=&quot;14&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;><line x1=&quot;18&quot; y1=&quot;6&quot; x2=&quot;6&quot; y2=&quot;18&quot;/><line x1=&quot;6&quot; y1=&quot;6&quot; x2=&quot;18&quot; y2=&quot;18&quot;/></svg></button></div>')">+ Add Stop</button>
       </div>
     </div>` : ''}
     <button type="button" class="btn btn-primary" onclick="foSaveFieldSettings()">Save</button>
@@ -7167,7 +7638,7 @@ function buildFieldCard(sess) {
     ? `<div class="field-card-actions"><div class="btn-row"><button class="btn btn-secondary btn-sm" onclick="openPauseModal('${sess.id}')">Pause</button><button class="btn btn-primary btn-sm" onclick="openFinishModal('${sess.id}')">Finish Field</button></div></div>`
     : sess.status==='paused'
     ? `<div class="field-card-actions"><div class="btn-row"><button class="btn btn-secondary btn-sm" onclick="openResumeModal('${sess.id}')">Resume</button><button class="btn btn-primary btn-sm" onclick="openFinishModal('${sess.id}')">Finish Field</button></div></div>`
-    : `<div class="field-card-actions"><button class="btn btn-secondary btn-sm" onclick="exportSessionPDF('${sess.id}')">📄 Save PDF</button></div>`;
+    : `<div class="field-card-actions"><button class="btn btn-secondary btn-sm" onclick="exportSessionPDF('${sess.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Save PDF</button></div>`;
   const progColor = pct>85 ? '#7ec850' : pct>50 ? '#4a9e1a' : '#3a6e14';
   return `<div class="field-card">
     <div class="field-card-header">
@@ -7622,7 +8093,7 @@ function renderLog() {
           <div class="log-done-footer">
             <div class="btn-row">
               <button class="btn btn-secondary btn-sm" style="font-size:13px" onclick="toggleDoneLogSummary('${sess.id}')">${expanded ? 'Collapse' : 'Expand'}</button>
-              <button class="btn btn-secondary btn-sm" style="font-size:13px;border-color:var(--accent);color:var(--accent)" onclick="exportSessionPDF('${sess.id}')">📄 Save PDF</button>
+              <button class="btn btn-secondary btn-sm" style="font-size:13px;border-color:var(--accent);color:var(--accent)" onclick="exportSessionPDF('${sess.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Save PDF</button>
             </div>
           </div>
         </div>
@@ -8160,7 +8631,7 @@ function renderSettingsFields() {
     </div>
     <div class="settings-item-right">
       <button class="btn btn-secondary btn-sm" onclick="editField('${f.id}')">Edit</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteField('${f.id}')">✕</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteField('${f.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
   </div>`).join('');
 }
@@ -8479,6 +8950,545 @@ function exportAllPDF() {
   showToast('PDF saved!');
 }
 
+// ===== PIVOT PDF EXPORTS =====
+function buildPdfHeader(doc, title, subtitle) {
+  const pw = doc.internal.pageSize.getWidth();
+  doc.setFillColor(15, 26, 15);
+  doc.rect(0, 0, pw, 24, 'F');
+  doc.setTextColor(126, 200, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.text(title, 14, 15);
+  doc.setTextColor(90, 122, 80);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(subtitle || '', pw - 14, 15, { align: 'right' });
+  return 28;
+}
+function buildPdfFooter(doc, text) {
+  const ph = doc.internal.pageSize.getHeight();
+  doc.setFontSize(7);
+  doc.setTextColor(90, 122, 80);
+  doc.setFont('helvetica', 'normal');
+  doc.text(text, 14, ph - 6);
+}
+function buildPdfSectionHeader(doc, y, text) {
+  const pw = doc.internal.pageSize.getWidth();
+  const lm = 14;
+  doc.setFillColor(30, 46, 30);
+  doc.rect(lm, y, pw - lm * 2, 9, 'F');
+  doc.setTextColor(126, 200, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text(text, lm + 3, y + 6.3);
+  return y + 13;
+}
+function fmtPdfDate(ts) {
+  if (ts == null || ts === '') return '—';
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return '—';
+  const datePart = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+  const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  return datePart + ' ' + timePart;
+}
+function pdfSafeName(str) {
+  return String(str || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'field';
+}
+const PDF_LABEL_COL = { fontStyle: 'bold', fillColor: [37, 53, 37], textColor: [139, 184, 122] };
+const PDF_VALUE_COL = { fillColor: [30, 46, 30], textColor: [216, 240, 200] };
+const PDF_TABLE_STYLES = { fontSize: 8.5, cellPadding: 3, lineColor: [45, 66, 45], lineWidth: 0.2 };
+function pdfLabelValueTable(doc, y, rows) {
+  doc.autoTable({
+    startY: y,
+    margin: { left: 14, right: 14 },
+    body: rows,
+    columnStyles: {
+      0: Object.assign({ cellWidth: 38 }, PDF_LABEL_COL),
+      1: Object.assign({ cellWidth: 52 }, PDF_VALUE_COL),
+      2: Object.assign({ cellWidth: 38 }, PDF_LABEL_COL),
+      3: Object.assign({ cellWidth: 52 }, PDF_VALUE_COL),
+    },
+    styles: PDF_TABLE_STYLES,
+    theme: 'grid',
+  });
+  return doc.lastAutoTable.finalY + 6;
+}
+function pdfFullWidthRow(label, value) {
+  return [
+    Object.assign({ content: label }, PDF_LABEL_COL),
+    Object.assign({ content: value, colSpan: 3 }, PDF_VALUE_COL),
+  ];
+}
+function ptRunArcDisplay(run, field) {
+  const F = ptMergeFieldDefaults(field);
+  const fullArcDeg = ptFieldArcDeg(F);
+  const endDeg = run.endDegrees != null ? parseFloat(run.endDegrees) : (parseFloat(run.startDegrees) || 0);
+  const singlePassArc = ptArcDeg(parseFloat(run.startDegrees) || 0, endDeg, run.direction);
+  const isFullPass = singlePassArc >= (fullArcDeg - 20) || Math.abs(singlePassArc - fullArcDeg) <= 10;
+  const passes = Math.max(1, parseInt(run.passesCompleted, 10) || 1);
+  if (isFullPass) return `${passes} pass${passes > 1 ? 'es' : ''}`;
+  return `${singlePassArc.toFixed(0)}° (${passes} pass${passes > 1 ? 'es' : ''})`;
+}
+
+function buildPtRunSection(doc, run, startY) {
+  const pw = doc.internal.pageSize.getWidth();
+  const lm = 14;
+  const field = ptGetField(run.fieldId) || ptMergeFieldDefaults(null);
+  const F = ptMergeFieldDefaults(field);
+  const farm = (ptData.farmers || []).find(fa => fa.id === ptFarmerIdForField(F));
+  const farmName = farm ? farm.name : '—';
+  const fieldName = F.name || 'Field';
+
+  let y = startY;
+  doc.setFillColor(30, 46, 30);
+  doc.rect(lm, y, pw - lm * 2, 10, 'F');
+  doc.setTextColor(126, 200, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(fieldName.toUpperCase(), lm + 3, y + 7);
+  doc.setTextColor(90, 122, 80);
+  doc.setFontSize(9);
+  doc.text(run.status === 'completed' ? 'COMPLETED' : String(run.status || '').toUpperCase(), pw - lm - 3, y + 7, { align: 'right' });
+  y += 14;
+
+  const hoursPerPass = pfCalcHoursPerPass(F, run.speedPercent);
+  const arcDisplay = ptRunArcDisplay(run, field);
+  const water = run.waterAppliedInches != null && !isNaN(Number(run.waterAppliedInches)) ? Number(run.waterAppliedInches).toFixed(2) + ' in' : '—';
+  const acIn = run.acreInches != null && !isNaN(Number(run.acreInches)) ? Number(run.acreInches).toFixed(2) : '—';
+
+  const rows = [
+    ['Field', fieldName, 'Farm', farmName],
+    ['Date', fmtPdfDate(run.startTimestamp), 'Status', String(run.status || '—')],
+    ['Start Degrees', (run.startDegrees != null ? run.startDegrees : '—') + '°', 'End Degrees', run.endDegrees != null ? run.endDegrees + '°' : '—'],
+    ['Direction', run.direction || '—', 'Speed', (run.speedPercent != null ? run.speedPercent : '—') + '%'],
+    ['Arc Covered', arcDisplay, 'Passes', String(Math.max(1, parseInt(run.passesCompleted, 10) || 1))],
+    ['Hours per Pass', hoursPerPass ? hoursPerPass.toFixed(2) + ' h' : '—', 'Total Duration', ptFmtElapsed(ptRunElapsedMs(run))],
+    ['Water Applied', water, 'Acre-Inches', acIn],
+    pdfFullWidthRow('Notes', run.notes ? String(run.notes) : '—'),
+  ];
+  y = pdfLabelValueTable(doc, y, rows);
+
+  const linked = (pfData.sessions || []).find(s => s.linkedPivotRunId === run.id);
+  if (linked) {
+    y = buildPdfSectionHeader(doc, y, 'LINKED FERT SESSION');
+    const pumpNow = linked.updatedPumpSetting != null ? linked.updatedPumpSetting : linked.originalPumpSetting;
+    const linkedRows = [
+      ['Product', linked.product || '—', 'Units/Acre', linked.unitsPerAcre != null ? fmtNum(linked.unitsPerAcre, 2) : '—'],
+      ['Gal Injected', linked.totalGalInjected != null ? fmtNum(linked.totalGalInjected, 1) + ' gal' : '—', 'Pump Setting', pumpNow != null ? fmtNum(pumpNow, 1) + '%' : '—'],
+      ['Start Degrees', linked.startDegrees != null ? linked.startDegrees + '°' : '—', 'End Degrees', linked.endDegrees != null ? linked.endDegrees + '°' : '—'],
+    ];
+    y = pdfLabelValueTable(doc, y, linkedRows);
+  }
+  return y;
+}
+
+function exportPtRunPDF(runId) {
+  if (!window.jspdf || !window.jspdf.jsPDF) { showToast('PDF library not loaded', true); return; }
+  ptRefresh();
+  pfRefresh();
+  const run = (ptData.runs || []).find(r => r.id === runId);
+  if (!run) { showToast('Run not found', true); return; }
+  const F = ptMergeFieldDefaults(ptGetField(run.fieldId));
+  const fieldName = F.name || 'Field';
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+  buildPdfHeader(doc, 'PIVOT RUN REPORT', fieldName + '  ·  Generated: ' + fmtPdfDate(Date.now()));
+  buildPtRunSection(doc, run, 28);
+  buildPdfFooter(doc, 'Field Tracker · Pivot Run · ' + fieldName + ' · ' + fmtPdfDate(Date.now()));
+  doc.save('pivot-run-' + pdfSafeName(fieldName) + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
+  showToast('PDF saved!');
+}
+
+function exportPtSeasonPDF(seasonId) {
+  if (!window.jspdf || !window.jspdf.jsPDF) { showToast('PDF library not loaded', true); return; }
+  ptRefresh();
+  pfRefresh();
+  const season = (ptData.seasons || []).find(s => s.id === seasonId);
+  if (!season) { showToast('Season not found', true); return; }
+  const runs = (ptData.runs || []).filter(r => r.seasonId === seasonId && r.status === 'completed')
+    .sort((a, b) => new Date(a.startTimestamp || 0) - new Date(b.startTimestamp || 0));
+  if (!runs.length) { showToast('No completed runs for this season', true); return; }
+  const farm = (ptData.farmers || []).find(fa => fa.id === season.farmerId);
+  const farmName = farm ? farm.name : '—';
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+
+  runs.forEach((run, idx) => {
+    if (idx > 0) doc.addPage();
+    const F = ptMergeFieldDefaults(ptGetField(run.fieldId));
+    buildPdfHeader(doc, 'PIVOT RUN REPORT', (F.name || 'Field') + '  ·  ' + fmtPdfDate(run.startTimestamp));
+    buildPtRunSection(doc, run, 28);
+  });
+
+  doc.addPage();
+  let totalWaterAcIn = 0;
+  let totalPasses = 0;
+  let minDate = null, maxDate = null;
+  runs.forEach(run => {
+    const F = ptMergeFieldDefaults(ptGetField(run.fieldId));
+    const win = Number(run.waterAppliedInches);
+    if (!isNaN(win)) totalWaterAcIn += win * (parseFloat(F.acres) || 0);
+    totalPasses += Math.max(1, parseInt(run.passesCompleted, 10) || 1);
+    const t = run.startTimestamp ? new Date(run.startTimestamp).getTime() : null;
+    if (t != null && !isNaN(t)) {
+      if (minDate == null || t < minDate) minDate = t;
+      if (maxDate == null || t > maxDate) maxDate = t;
+    }
+  });
+  const y0 = buildPdfHeader(doc, 'PIVOT SEASON SUMMARY', farmName + ' · ' + (season.name || '') + '  ·  Generated: ' + fmtPdfDate(Date.now()));
+  const rangeStr = (minDate != null ? fmtPdfDate(minDate) : '—') + '  to  ' + (maxDate != null ? fmtPdfDate(maxDate) : '—');
+  const summaryRows = [
+    ['Season', season.name || '—', 'Farm', farmName],
+    ['Total Runs', String(runs.length), 'Total Passes', String(totalPasses)],
+    ['Total Water Applied', fmtNum(totalWaterAcIn, 2) + ' ac-in', 'Total Acre-Feet', fmtNum(totalWaterAcIn / 12, 2) + ' ac-ft'],
+    pdfFullWidthRow('Date Range', rangeStr),
+  ];
+  pdfLabelValueTable(doc, y0, summaryRows);
+  buildPdfFooter(doc, 'Field Tracker · Pivot Season · ' + farmName + ' · ' + (season.name || '') + ' · ' + fmtPdfDate(Date.now()));
+  const safe = pdfSafeName(farmName + '-' + (season.name || ''));
+  doc.save('pivot-season-' + safe + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
+  showToast('PDF saved!');
+}
+
+function foExportPtSeasonPDF() {
+  ptRefresh();
+  const field = foGetSharedField();
+  if (!field) { showToast('Select a field first', true); return; }
+  const ptField = foPivotFieldByShared(field);
+  const farmerId = ptFarmerIdForField(ptField);
+  const seasonYear = String(foCurrentSeason || foCurrentYearStr());
+  const season = (ptData.seasons || []).find(s => s.farmerId === farmerId && String(s.name) === seasonYear);
+  if (!season) { showToast('No pivot season found for this field/year', true); return; }
+  exportPtSeasonPDF(season.id);
+}
+
+function exportPfSessionPDF(sessionId) {
+  if (!window.jspdf || !window.jspdf.jsPDF) { showToast('PDF library not loaded', true); return; }
+  pfRefresh();
+  const session = (pfData.sessions || []).find(s => s.id === sessionId);
+  if (!session) { showToast('Session not found', true); return; }
+  const field = getSharedFields().find(f => f.id === session.fieldId) || {};
+  const fieldName = field.name || 'Field';
+  const farmName = field.farmName || '—';
+  const quickchecks = (pfData.quickchecks || []).filter(q => q.sessionId === sessionId).sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+  const refills = (pfData.refills || []).filter(r => r.sessionId === sessionId).sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  const lm = 14;
+  let y = buildPdfHeader(doc, 'PIVOT FERT REPORT', fieldName + '  ·  ' + fmtPdfDate(Date.now()));
+
+  doc.setFillColor(30, 46, 30);
+  doc.rect(lm, y, pw - lm * 2, 10, 'F');
+  doc.setTextColor(126, 200, 80);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(fieldName.toUpperCase(), lm + 3, y + 7);
+  doc.setTextColor(90, 122, 80);
+  doc.setFontSize(9);
+  doc.text(session.status === 'completed' ? 'COMPLETED' : String(session.status || '').toUpperCase(), pw - lm - 3, y + 7, { align: 'right' });
+  y += 14;
+
+  const pumpFinal = session.updatedPumpSetting != null ? fmtNum(session.updatedPumpSetting, 1) + '%' : '—';
+  const summaryRows = [
+    ['Field', fieldName, 'Farm', farmName],
+    ['Date', fmtPdfDate(session.startTimestamp), 'Status', String(session.status || '—')],
+    ['Product', session.product || '—', 'Injector Pump', session.injectorPumpGPH != null ? fmtNum(session.injectorPumpGPH, 2) + ' GPH' : '—'],
+    ['Start Degrees', session.startDegrees != null ? session.startDegrees + '°' : '—', 'End Degrees', session.endDegrees != null ? session.endDegrees + '°' : '—'],
+    ['Direction', session.direction || '—', 'Speed', session.speedPercent != null ? session.speedPercent + '%' : '—'],
+    ['Target Units/Acre', session.unitsPerAcre != null ? fmtNum(session.unitsPerAcre, 2) : '—', 'Target Gal/Pass', session.galNeeded != null ? fmtNum(session.galNeeded, 1) : '—'],
+    ['Original Pump %', session.originalPumpSetting != null ? fmtNum(session.originalPumpSetting, 1) + '%' : '—', 'Final Pump %', pumpFinal],
+    ['Tank Start', session.tankStartGal != null ? fmtNum(session.tankStartGal, 1) + ' gal' : '—', 'End Tank', session.endTankGal != null ? fmtNum(session.endTankGal, 1) + ' gal' : '—'],
+    ['Total Gal Injected', session.totalGalInjected != null ? fmtNum(session.totalGalInjected, 1) + ' gal' : '—', 'Units Applied', session.totalLbsNApplied != null ? fmtNum(session.totalLbsNApplied, 2) : '—'],
+    ['Units/Acre Applied', session.unitsPerAcreApplied != null ? fmtNum(session.unitsPerAcreApplied, 2) : '—', 'Passes', String(Math.max(1, parseInt(session.passesCompleted, 10) || 1))],
+    pdfFullWidthRow('Arc Covered', session.arcDisplay || '—'),
+    pdfFullWidthRow('Notes', session.notes ? String(session.notes) : '—'),
+  ];
+  y = pdfLabelValueTable(doc, y, summaryRows);
+
+  if (refills.length) {
+    if (y > ph - 50) { doc.addPage(); y = 14; }
+    y = buildPdfSectionHeader(doc, y, 'REFILLS');
+    const refillRows = refills.map((r, i) => [i + 1, fmtPdfDate(r.timestamp), fmtNum(r.galBefore, 1), fmtNum(r.galAfter, 1), fmtNum(r.galAdded, 1)]);
+    doc.autoTable({
+      startY: y,
+      margin: { left: lm, right: lm },
+      head: [['#', 'Date/Time', 'Gal Before', 'Gal After', 'Gal Added']],
+      body: refillRows,
+      headStyles: Object.assign({ fontSize: 8 }, PDF_LABEL_COL),
+      bodyStyles: Object.assign({ fontSize: 8 }, PDF_VALUE_COL),
+      styles: PDF_TABLE_STYLES,
+      theme: 'grid',
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  }
+
+  if (quickchecks.length) {
+    if (y > ph - 50) { doc.addPage(); y = 14; }
+    y = buildPdfSectionHeader(doc, y, 'QUICK CHECKS');
+    const qcRows = quickchecks.map(q => [
+      fmtPdfDate(q.timestamp),
+      pfFmtElapsed(q.elapsedMs || 0),
+      q.currentDegrees != null ? fmtNum(q.currentDegrees, 1) + '°' : '—',
+      q.currentTankGal != null ? fmtNum(q.currentTankGal, 1) : '—',
+      q.realPumpPct != null ? fmtNum(q.realPumpPct, 1) + '%' : '—',
+      (q.recommendedPumpPct != null ? fmtNum(q.recommendedPumpPct, 1) + '%' : '—') + (q.confirmedPumpUpdate ? ' *' : ''),
+    ]);
+    doc.autoTable({
+      startY: y,
+      margin: { left: lm, right: lm },
+      head: [['Time', 'Elapsed', 'Degrees', 'Tank Gal', 'Real Pump %', 'Recommended %']],
+      body: qcRows,
+      headStyles: Object.assign({ fontSize: 8 }, PDF_LABEL_COL),
+      bodyStyles: Object.assign({ fontSize: 8 }, PDF_VALUE_COL),
+      styles: PDF_TABLE_STYLES,
+      theme: 'grid',
+    });
+    y = doc.lastAutoTable.finalY + 4;
+    if (quickchecks.some(q => q.confirmedPumpUpdate)) {
+      doc.setFontSize(7);
+      doc.setTextColor(90, 122, 80);
+      doc.setFont('helvetica', 'normal');
+      doc.text('* = confirmed pump setting update', lm, y + 3);
+    }
+  }
+
+  buildPdfFooter(doc, 'Field Tracker · Pivot Fert · ' + fieldName + ' · ' + fmtPdfDate(Date.now()));
+  doc.save('pivot-fert-' + pdfSafeName(fieldName) + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
+  showToast('PDF saved!');
+}
+
+function exportPfFieldSeasonPDF(fieldId, seasonYear) {
+  if (!window.jspdf || !window.jspdf.jsPDF) { showToast('PDF library not loaded', true); return; }
+  pfRefresh();
+  const field = getSharedFields().find(f => f.id === fieldId);
+  if (!field) { showToast('Field not found', true); return; }
+  const year = String(seasonYear);
+  const sessions = (pfData.sessions || []).filter(s => String(s.fieldId) === String(fieldId) && s.status === 'completed' && String(s.seasonYear || '') === year)
+    .sort((a, b) => new Date(a.startTimestamp || 0) - new Date(b.startTimestamp || 0));
+  if (!sessions.length) { showToast('No completed sessions for this field/year', true); return; }
+
+  let totalGal = 0, totalUnits = 0;
+  sessions.forEach(s => {
+    totalGal += Number(s.totalGalInjected) || 0;
+    totalUnits += Number(s.totalLbsNApplied) || 0;
+  });
+  const acres = parseFloat(field.acres) || 1;
+  const unitsPerAcre = totalUnits / acres;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+  let y = buildPdfHeader(doc, 'PIVOT FERT SEASON SUMMARY', (field.name || 'Field') + '  ·  ' + year + '  ·  Generated: ' + fmtPdfDate(Date.now()));
+
+  const summaryRows = [
+    ['Field', field.name || '—', 'Farm', field.farmName || '—'],
+    ['Season', year, 'Sessions', String(sessions.length)],
+    ['Total Gal Injected', fmtNum(totalGal, 1) + ' gal', 'Total Units Applied', fmtNum(totalUnits, 1)],
+    pdfFullWidthRow('Units/Acre', fmtNum(unitsPerAcre, 2)),
+  ];
+  y = pdfLabelValueTable(doc, y, summaryRows);
+
+  y = buildPdfSectionHeader(doc, y, 'SESSIONS');
+  const sessRows = sessions.map((s, i) => [i + 1, fmtPdfDate(s.startTimestamp), s.product || '—', s.totalGalInjected != null ? fmtNum(s.totalGalInjected, 1) : '—', s.unitsPerAcreApplied != null ? fmtNum(s.unitsPerAcreApplied, 2) : '—', s.arcDisplay || '—']);
+  doc.autoTable({
+    startY: y,
+    margin: { left: 14, right: 14 },
+    head: [['#', 'Date', 'Product', 'Gal Injected', 'Units/Acre', 'Arc']],
+    body: sessRows,
+    headStyles: Object.assign({ fontSize: 8 }, PDF_LABEL_COL),
+    bodyStyles: Object.assign({ fontSize: 8 }, PDF_VALUE_COL),
+    styles: PDF_TABLE_STYLES,
+    theme: 'grid',
+  });
+
+  buildPdfFooter(doc, 'Field Tracker · Pivot Fert Season · ' + (field.name || '') + ' · ' + year + ' · ' + fmtPdfDate(Date.now()));
+  const safe = pdfSafeName((field.name || 'field') + '-' + year);
+  doc.save('pivot-fert-season-' + safe + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
+  showToast('PDF saved!');
+}
+
+function foExportPfFieldSeasonPDF() {
+  const field = foGetSharedField();
+  if (!field) { showToast('Select a field first', true); return; }
+  const seasonYear = String(foCurrentSeason || foCurrentYearStr());
+  exportPfFieldSeasonPDF(field.id, seasonYear);
+}
+
+// ==================== SPRAYER CALC ====================
+let sprayerCurrentTab = 'calc';
+let sprayerSelectedMixId = '';
+let sprayerCalcMode = 'acres';
+let sprayerAcresVal = '';
+let sprayerGalVal = '';
+let sprayerAppRateVal = '';
+
+function sprayerShowTab(tab) {
+  sprayerCurrentTab = tab === 'mixes' ? 'mixes' : 'calc';
+  document.querySelectorAll('#nav-sprayer-bar .nav-btn').forEach(b => { if (b.id !== 'nav-sprayer-home') b.classList.remove('active'); });
+  const nb = sprayerCurrentTab === 'mixes' ? document.getElementById('nav-sprayer-mixes') : document.getElementById('nav-sprayer-calc');
+  if (nb) nb.classList.add('active');
+  renderSprayerPage();
+}
+
+function renderSprayerPage() {
+  const wrap = document.getElementById('sprayer-content');
+  if (!wrap) return;
+  mixesRefresh();
+  if (sprayerCurrentTab === 'mixes') {
+    wrap.innerHTML = renderSprayerMixes();
+  } else {
+    wrap.innerHTML = renderSprayerCalc();
+    sprayerUpdateCalc();
+  }
+}
+
+function sprayerLoadMix() {
+  const sel = document.getElementById('sprayer-mix-select');
+  sprayerSelectedMixId = sel ? sel.value : '';
+  const mix = mixesData.find(m => m.id === sprayerSelectedMixId);
+  sprayerAppRateVal = mix && mix.appRateGalPerAcre != null && !isNaN(mix.appRateGalPerAcre) ? mix.appRateGalPerAcre : '';
+  sprayerAcresVal = '';
+  sprayerGalVal = '';
+  renderSprayerPage();
+}
+
+function sprayerSetCalcMode(mode) {
+  sprayerCalcMode = mode === 'gal' ? 'gal' : 'acres';
+  renderSprayerPage();
+}
+
+function renderSprayerCalc() {
+  const mixes = mixesData.slice().sort((a, b) => (a.mixName || '').localeCompare(b.mixName || ''));
+  const mixOptions = mixes.map(m => `<option value="${m.id}"${m.id === sprayerSelectedMixId ? ' selected' : ''}>${notesEscapeAttr(m.mixName || 'Untitled Mix')}</option>`).join('');
+  let html = `<div class="card">
+    <div class="card-title">Mix</div>
+    <div class="input-group" style="margin-bottom:0">
+      <select id="sprayer-mix-select" onchange="sprayerLoadMix()">
+        <option value="">-- choose mix --</option>
+        ${mixOptions}
+      </select>
+    </div>
+  </div>`;
+
+  if (!mixes.length) {
+    html += '<div class="empty">No mixes saved yet.<br>Add one in the Mixes tab.</div>';
+    return html;
+  }
+
+  const mix = mixes.find(m => m.id === sprayerSelectedMixId);
+  if (!mix) {
+    html += '<div class="empty">Select a mix to calculate.</div>';
+    return html;
+  }
+
+  const prodLine = (mix.products || []).map(p => `${p.quantity != null ? p.quantity : 0} ${p.unit || 'oz'} ${p.name || ''}`).join(', ');
+  html += `<div class="card">
+    <div class="card-title">Mix Details</div>
+    <div class="info-row"><span class="info-key">Unit Type</span><span class="info-val">${notesEscapeAttr(mix.unitType || 'Sprayer')}</span></div>
+    <div class="info-row"><span class="info-key">Tank Size</span><span class="info-val">${fmtNum(mix.tankSizeGal, 1)} gal</span></div>
+    <div style="font-size:13px;color:var(--text2);margin-top:6px">${notesEscapeAttr(prodLine || '—')}</div>
+  </div>
+  <div class="input-group" style="margin-bottom:8px">
+    <label class="input-label">Input Mode</label>
+    <div style="display:flex;gap:8px">
+      <button type="button" id="sprayer-mode-acres" class="btn btn-secondary" style="flex:1;margin:0${sprayerCalcMode === 'acres' ? '' : ';opacity:0.55'}" onclick="sprayerSetCalcMode('acres')">By Acres</button>
+      <button type="button" id="sprayer-mode-gal" class="btn btn-secondary" style="flex:1;margin:0${sprayerCalcMode === 'gal' ? '' : ';opacity:0.55'}" onclick="sprayerSetCalcMode('gal')">By Load Gal</button>
+    </div>
+  </div>
+  <div id="sprayer-mode-acres-wrap" style="display:${sprayerCalcMode === 'acres' ? 'block' : 'none'}">
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div class="input-group" style="flex:1;margin-bottom:0"><label class="input-label">Acres</label><input type="number" id="sprayer-acres" min="0" step="0.1" placeholder="e.g. 120" value="${notesEscapeAttr(sprayerAcresVal)}" oninput="sprayerUpdateCalc()"></div>
+      <div class="input-group" style="flex:1;margin-bottom:0"><label class="input-label">App Rate (gal/ac)</label><input type="number" id="sprayer-app-rate" min="0" step="0.1" placeholder="e.g. 15" value="${notesEscapeAttr(sprayerAppRateVal)}" oninput="sprayerUpdateCalc()"></div>
+    </div>
+  </div>
+  <div id="sprayer-mode-gal-wrap" style="display:${sprayerCalcMode === 'gal' ? 'block' : 'none'}">
+    <div class="input-group"><label class="input-label">Load Gallons</label><input type="number" id="sprayer-load-gal" min="0" step="0.1" placeholder="e.g. ${mix.tankSizeGal || 300}" value="${notesEscapeAttr(sprayerGalVal)}" oninput="sprayerUpdateCalc()"></div>
+  </div>
+  <div class="card" id="sprayer-calc-results"></div>`;
+  return html;
+}
+
+function sprayerUpdateCalc() {
+  const resultsEl = document.getElementById('sprayer-calc-results');
+  if (!resultsEl) return;
+  const mix = mixesData.find(m => m.id === sprayerSelectedMixId);
+  if (!mix) { resultsEl.innerHTML = ''; return; }
+  const tankSize = parseFloat(mix.tankSizeGal) || 0;
+  const products = mix.products || [];
+  const acresInput = document.getElementById('sprayer-acres');
+  const rateInput = document.getElementById('sprayer-app-rate');
+  const galInput = document.getElementById('sprayer-load-gal');
+  if (acresInput) sprayerAcresVal = acresInput.value;
+  if (rateInput) sprayerAppRateVal = rateInput.value;
+  if (galInput) sprayerGalVal = galInput.value;
+
+  let loadSize, ratio, loads = null, totalGal = null;
+  if (sprayerCalcMode === 'gal') {
+    const inputGal = parseFloat(galInput && galInput.value);
+    loadSize = !isNaN(inputGal) && inputGal > 0 ? inputGal : tankSize;
+    ratio = tankSize > 0 ? loadSize / tankSize : 1;
+  } else {
+    const acres = parseFloat(acresInput && acresInput.value) || 0;
+    const rate = parseFloat(rateInput && rateInput.value) || 0;
+    totalGal = acres * rate;
+    loads = tankSize > 0 ? Math.ceil(totalGal / tankSize) : 0;
+    loadSize = tankSize;
+    ratio = 1;
+  }
+
+  let html = '<div class="card-title">Results</div>';
+  html += `<div class="info-row"><span class="info-key">Load Size</span><span class="info-val">${fmtNum(loadSize, 1)} gal</span></div>`;
+  if (!products.length) {
+    html += '<div class="empty" style="padding:16px 0">No products in this mix.</div>';
+  } else {
+    html += '<hr class="divider"><div class="section-title" style="margin-bottom:6px">Per Load</div>';
+    products.forEach(p => {
+      const q = (p.quantity != null ? p.quantity : 0) * ratio;
+      html += `<div class="info-row"><span class="info-key">${notesEscapeAttr(p.name || 'Product')}</span><span class="info-val">${fmtNum(q, 2)} ${notesEscapeAttr(p.unit || 'oz')}</span></div>`;
+    });
+  }
+  if (sprayerCalcMode === 'acres') {
+    html += '<hr class="divider">';
+    html += `<div class="info-row"><span class="info-key">Total Gal Needed</span><span class="info-val">${fmtNum(totalGal, 1)} gal</span></div>`;
+    html += `<div class="info-row"><span class="info-key">Loads Needed</span><span class="info-val">${loads}</span></div>`;
+    if (products.length) {
+      html += '<div class="section-title" style="margin-top:10px;margin-bottom:6px">Total For Job</div>';
+      products.forEach(p => {
+        const q = (p.quantity != null ? p.quantity : 0) * loads;
+        html += `<div class="info-row"><span class="info-key">${notesEscapeAttr(p.name || 'Product')}</span><span class="info-val">${fmtNum(q, 2)} ${notesEscapeAttr(p.unit || 'oz')}</span></div>`;
+      });
+    }
+  }
+  resultsEl.innerHTML = html;
+}
+
+function renderSprayerMixes() {
+  const list = mixesData.slice().sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+  let html = '<button type="button" class="btn btn-primary" style="margin-bottom:12px" onclick="mixesOpenAddModal()">Add Mix</button>';
+  if (!list.length) return html + '<div class="empty">No mixes saved.</div>';
+  list.forEach(m => {
+    const ut = m.unitType || 'Sprayer';
+    const prodLine = (m.products || []).map(p => `${p.quantity != null ? p.quantity : 0} ${p.unit || 'oz'} ${p.name || ''}`).join(', ');
+    const tank = m.tankSizeGal != null && m.tankSizeGal > 0 ? `Tank ${m.tankSizeGal} gal` : '';
+    const rate = m.appRateGalPerAcre != null && !isNaN(m.appRateGalPerAcre) ? `App rate ${m.appRateGalPerAcre} gal/ac` : '';
+    const meta = [tank, rate].filter(Boolean).join(' · ');
+    html += `<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+        <div><strong style="font-size:16px">${notesEscapeAttr(m.mixName)}</strong> <span class="badge" style="font-size:10px">${notesEscapeAttr(ut)}</span></div>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="menu-trigger" style="padding:6px" onclick="mixesOpenEditModal('${String(m.id).replace(/'/g, "\\'")}')" aria-label="Edit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button type="button" class="menu-trigger" style="padding:6px" onclick="if(confirm('Delete this mix?')){mixesRemove('${String(m.id).replace(/'/g, "\\'")}');renderSprayerPage();}" aria-label="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:4px">${notesEscapeAttr(prodLine || '—')}</div>
+      ${meta ? `<div style="font-size:12px;color:var(--text3)">${notesEscapeAttr(meta)}</div>` : ''}
+    </div>`;
+  });
+  return html;
+}
+
 // ==================== MODAL BACKDROP ====================
 document.querySelectorAll('.modal-overlay').forEach(o=>{
   o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('open'); });
@@ -8520,44 +9530,36 @@ async function initApp() {
     pfSyncLocalToFirestoreIfNewer(firstPf);
   }
   const firstNotes = await loadNotesFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    notesData = nextRemote;
-    try { localStorage.setItem(NOTES_LS_KEY, JSON.stringify(notesData)); } catch (e) {}
-    renderAllPages();
+    if (notesApplyRemoteIfNewer(nextRemote)) renderAllPages();
   });
-  if (firstNotes) {
-    notesData = firstNotes;
-    try { localStorage.setItem(NOTES_LS_KEY, JSON.stringify(notesData)); } catch (e) {}
+  if (notesApplyRemoteIfNewer(firstNotes)) {
+    /* remote applied */
+  } else {
+    notesSyncLocalToFirestoreIfNewer(firstNotes);
   }
   const firstTodos = await loadTodosFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    todosData = nextRemote;
-    try { localStorage.setItem(TODOS_LS_KEY, JSON.stringify(todosData)); } catch (e) {}
-    renderAllPages();
+    if (todosApplyRemoteIfNewer(nextRemote)) renderAllPages();
   });
-  if (firstTodos) {
-    todosData = firstTodos;
-    try { localStorage.setItem(TODOS_LS_KEY, JSON.stringify(todosData)); } catch (e) {}
+  if (todosApplyRemoteIfNewer(firstTodos)) {
+    /* remote applied */
+  } else {
+    todosSyncLocalToFirestoreIfNewer(firstTodos);
   }
   const firstMixes = await loadMixesFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    mixesData = nextRemote;
-    try { localStorage.setItem(MIXES_LS_KEY, JSON.stringify(mixesData)); } catch (e) {}
-    renderAllPages();
+    if (mixesApplyRemoteIfNewer(nextRemote)) renderAllPages();
   });
-  if (firstMixes) {
-    mixesData = firstMixes;
-    try { localStorage.setItem(MIXES_LS_KEY, JSON.stringify(mixesData)); } catch (e) {}
+  if (mixesApplyRemoteIfNewer(firstMixes)) {
+    /* remote applied */
+  } else {
+    mixesSyncLocalToFirestoreIfNewer(firstMixes);
   }
   const firstGps = await loadGpsFromFirestore((nextRemote) => {
-    if (!nextRemote) return;
-    gpsData = nextRemote;
-    try { localStorage.setItem(GPS_LS_KEY, JSON.stringify(gpsData)); } catch (e) {}
-    renderAllPages();
+    if (gpsApplyRemoteIfNewer(nextRemote)) renderAllPages();
   });
-  if (firstGps) {
-    gpsData = firstGps;
-    try { localStorage.setItem(GPS_LS_KEY, JSON.stringify(gpsData)); } catch (e) {}
+  if (gpsApplyRemoteIfNewer(firstGps)) {
+    /* remote applied */
+  } else {
+    gpsSyncLocalToFirestoreIfNewer(firstGps);
   }
   renderAllPages();
   ptInit();
